@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SDG Progress — Scrollytelling (Intro + Electricity)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --gap: 16px; --shadow: 0 1px 2px rgba(0,0,0,.08); }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #0f172a; background: #fafafa; }
+
+    header#hero { padding: 28px 20px 8px; border-bottom: 1px solid #e2e8f0; background: #fff; position: sticky; top: 0; z-index: 5; }
+    header#hero h1 { margin: 0 0 8px; font-size: clamp(22px, 2.8vw, 32px); }
+    header#hero p { margin: 0; color: #475569; }
+
+    main.scrolly { display: grid; grid-template-columns: minmax(320px, 55vw) 1fr; gap: 0; align-items: start; }
+    @media (max-width: 980px) {
+      main.scrolly { grid-template-columns: 1fr; }
+    }
+
+    /* Sticky map panel */
+    #sticky-map {
+      position: sticky;
+      top: 68px;          /* leave room for sticky hero */
+      align-self: start;
+      height: calc(100vh - 68px);
+      display: grid;
+      grid-template-rows: 1fr auto;
+      background: #fff;
+      border-right: 1px solid #e2e8f0;
+    }
+    #map { width: 100%; height: 100%; }
+    #legend { padding: 8px 12px; border-top: 1px solid #e2e8f0; background: #fff; }
+
+    /* Right side story column */
+    #story { padding: 20px; display: grid; gap: 64px; }
+    .step {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 16px 12px;
+      box-shadow: var(--shadow);
+    }
+    .step h2 { margin: 8px 0 8px; font-size: clamp(18px, 2.2vw, 24px); }
+    .step p { margin: 8px 0; color: #334155; line-height: 1.5; }
+
+    /* Intro tiles */
+    .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); margin-top: 12px; }
+    @media (max-width: 680px) { .tiles { grid-template-columns: 1fr; } }
+    .tile {
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px;
+    }
+    .tile h3 { margin: 0 0 4px; font-size: 14px; color: #334155; font-weight: 600; }
+    .big { font-size: 28px; font-weight: 700; }
+    .delta { color: #059669; font-weight: 600; margin-left: 6px; }
+
+    .subtle { color: #64748b; font-size: 12px; }
+
+    /* Tooltip on map */
+    .tooltip {
+      position: fixed; pointer-events: none; background: rgba(0,0,0,.85);
+      color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 12px;
+      transform: translate(-50%, -120%); opacity: 0; transition: opacity .12s ease;
+      z-index: 10;
+    }
+
+    /* Slope chart container */
+    .viz-wrap { display: grid; gap: 8px; margin-top: 8px; }
+    .viz-title { font-size: 14px; color: #475569; }
+    #slope svg { width: 100%; height: 360px; display: block; background:#fff; }
+
+    /* Legend styles */
+    .legend-row { display:flex; align-items:center; gap:10px; }
+    .legend-swatch { width: 18px; height: 12px; border-radius: 3px; display: inline-block; border:1px solid rgba(0,0,0,.1); }
+    .legend-label { font-size: 12px; color:#475569; }
+
+    .credits { color:#64748b; font-size:12px; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <header id="hero">
+    <h1>Are We On Track for 2030? — Foundations of Access Since 2015</h1>
+    <p>We follow access to <strong>electricity</strong>, <strong>the internet</strong>, and <strong>safely managed water</strong> since the SDGs began (2015).</p>
+  </header>
+
+  <main class="scrolly">
+    <aside id="sticky-map">
+      <div id="map"></div>
+      <div id="legend"></div>
+    </aside>
+
+    <article id="story">
+      <!-- Section 0: Intro -->
+      <section class="step" data-scene="intro">
+        <h2>The 2015 Promise</h2>
+        <p>
+          In 2015, countries adopted the Sustainable Development Goals. Since then, billions have seen improvements in core living standards.
+          Below are population-weighted global averages from 2015 to the latest comparable year.
+        </p>
+        <div class="tiles" id="intro-tiles">
+          <div class="tile" id="tile-electricity">
+            <h3>Electricity access (SDG 7)</h3>
+            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span>
+              <span class="delta" data-delta>(+— pp)</span>
+            </div>
+            <div class="subtle" data-yearnote>2015 → —</div>
+          </div>
+          <div class="tile" id="tile-internet">
+            <h3>Internet users (SDG 9)</h3>
+            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span>
+              <span class="delta" data-delta>(+— pp)</span>
+            </div>
+            <div class="subtle" data-yearnote>2015 → —</div>
+          </div>
+          <div class="tile" id="tile-water">
+            <h3>Safely managed water (SDG 6)</h3>
+            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span>
+              <span class="delta" data-delta>(+— pp)</span>
+            </div>
+            <div class="subtle" data-yearnote>2015 → —</div>
+          </div>
+        </div>
+        <p class="subtle credits">Averages are population-weighted using <code>SP.POP.TOTL</code>. Latest year is the overlap across all three metrics.</p>
+      </section>
+
+      <!-- Section 1: Electricity -->
+      <section class="step" data-scene="electricity">
+        <h2>Powering Progress — Electricity</h2>
+        <p>
+          Many countries made large gains in electricity access since 2015. The map animates from 2015 to the latest year, and the slope chart
+          highlights the top absolute movers.
+        </p>
+        <div class="viz-wrap">
+          <div class="viz-title" id="slope-title">Top 10 countries by absolute gain since 2015 (pp)</div>
+          <div id="slope"></div>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <div id="tooltip" class="tooltip"></div>
+
+  <!-- D3 (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+  <script type="module">
+    // ========== FILES (adjust paths if needed) ==========
+    const GEO_FILE = "./custom.geo.json";
+    const FILES = {
+      ELEC: "data/EG.ELC.ACCS.ZS.csv",
+      NET:  "data/IT.NET.USER.ZS.csv",
+      WATER:"data/SH.H2O.SMDW.ZS.csv",
+      POP:  "data/SP.POP.TOTL.csv",
+    };
+
+    // ========= D3 helpers =========
+    const fmtPct = d => d == null ? "—" : d3.format(".1f")(d) + "%";
+    const fmtPP  = d => (d >= 0 ? "+" : "") + d3.format(".1f")(d) + " pp";
+
+    // ========= World Bank CSV loader (robust) =========
+    async function loadWB(file) {
+      const raw = await d3.text(file);
+      const text = raw.replace(/^\uFEFF/, "");
+      const lines = text.split(/\r?\n/);
+      const headerIdx = lines.findIndex(l => /^"Country Name","Country Code","Indicator Name","Indicator Code"/.test(l));
+      const csvText = headerIdx >= 0 ? lines.slice(headerIdx).join("\n") : text;
+      const rows = d3.csvParse(csvText);
+      const cols = rows.columns ?? Object.keys(rows[0] || {});
+      const years = cols.filter(c => /^\d{4}$/.test(c)).map(Number).sort((a,b)=>a-b);
+      const byISO3 = new Map(rows.map(r => [r["Country Code"], r]));
+      return { rows, years, byISO3 };
+    }
+
+    // ========= Data accessors =========
+    function val(ind, iso3, year) {
+      const row = DATA[ind].byISO3.get(iso3);
+      if (!row) return null;
+      const raw = row[String(year)];
+      const num = raw === "" || raw == null ? NaN : +raw;
+      return Number.isFinite(num) ? num : null;
+    }
+    function pop(iso3, year) {
+      const row = DATA.POP.byISO3.get(iso3);
+      if (!row) return null;
+      const raw = row[String(year)];
+      const num = raw === "" || raw == null ? NaN : +raw;
+      return Number.isFinite(num) ? num : null;
+    }
+    function getISO3(f) {
+      const p = f.properties || {};
+      let iso = p.iso_a3 || p.adm0_a3 || p.ADM0_A3 || p.ISO_A3 || f.id;
+      if (iso === "-99") iso = "XKX"; // Kosovo fix (common in some files)
+      return iso;
+    }
+
+    // ========= Global state =========
+    const DATA = {};        // { ELEC:{years,byISO3}, NET:{...}, WATER:{...}, POP:{...} }
+    const SCENES = {};      // name -> function
+    let GEO;                // FeatureCollection
+    let yearsCommon;        // common overlap of ELEC+NET+WATER for Intro
+    let latestCommonYear;   // max common year
+    const SDG_START = 2015;
+
+    // ========= Map setup =========
+    const mapEl = d3.select("#map");
+    const tooltip = d3.select("#tooltip");
+
+    const width = Math.min(900, mapEl.node().clientWidth || 900);
+    const height = Math.max(380, Math.round(width * 0.55));
+
+    const svg = mapEl.append("svg").attr("width", "100%").attr("height", "100%");
+    const gMain = svg.append("g");
+    const gCountries = gMain.append("g");
+    const projection = d3.geoNaturalEarth1();
+    const path = d3.geoPath(projection);
+
+    const color = d3.scaleSequential().interpolator(d3.interpolateYlGnBu).domain([0,100]);
+    const noDataColor = "#e0e0e0";
+
+    function renderLegendContinuous(domain=[0,100], label="%") {
+      const root = d3.select("#legend");
+      root.html("");
+      const w = 220, h = 12;
+      const svgL = root.append("svg").attr("width", w+90).attr("height", 40);
+      const defs = svgL.append("defs");
+      const id = "grad-" + Math.random().toString(36).slice(2);
+      const grad = defs.append("linearGradient").attr("id", id);
+      grad.selectAll("stop").data(d3.range(0,1.0001,0.1)).join("stop")
+        .attr("offset", d => (d*100)+"%")
+        .attr("stop-color", d => color(domain[0] + d*(domain[1]-domain[0])));
+      svgL.append("rect").attr("x", 10).attr("y", 10).attr("width", w).attr("height", h)
+        .attr("fill", `url(#${id})`).attr("rx", 3).attr("stroke", "#e2e8f0");
+      const scale = d3.scaleLinear().domain(domain).range([10,10+w]);
+      const axis = d3.axisBottom(scale).ticks(5).tickSize(4);
+      svgL.append("g").attr("transform", `translate(0, ${10+h})`).call(axis).select(".domain").remove();
+      svgL.append("text").attr("x", 10+w+8).attr("y", 20).attr("font-size", 11).text(label);
+      svgL.append("rect").attr("x", 10+w+8).attr("y", 24).attr("width", 14).attr("height", 10)
+        .attr("fill", noDataColor).attr("rx",2).attr("stroke","#e2e8f0");
+      svgL.append("text").attr("x", 10+w+26).attr("y", 33).attr("font-size", 11).text("No data");
+    }
+
+    function setMapMetric_Electricity(year) {
+      // (re)fill using electricity access
+      gCountries.selectAll("path.country").attr("fill", d => {
+        const iso = getISO3(d);
+        const v = val("ELEC", iso, year);
+        return v == null ? noDataColor : color(Math.max(0, Math.min(100, v)));
+      });
+      renderLegendContinuous([0,100], "% access");
+    }
+
+    function attachTooltip(metricCode, year) {
+      gCountries.selectAll("path.country")
+        .on("mousemove", (event, d) => {
+          const iso = getISO3(d);
+          const name = d.properties?.name || d.properties?.name_en || d.properties?.ADMIN || iso;
+          let v = null;
+          if (metricCode === "ELEC") v = val("ELEC", iso, year);
+          tooltip
+            .style("left", (event.clientX) + "px")
+            .style("top", (event.clientY) + "px")
+            .style("opacity", 1)
+            .html(`<strong>${name}</strong><br>Electricity access: ${fmtPct(v) } (${year})`);
+        })
+        .on("mouseout", () => tooltip.style("opacity", 0));
+    }
+
+    function animateYear(fromYear, toYear, duration=1200, renderYearFn) {
+      const t0 = performance.now();
+      function frame(now) {
+        const k = Math.min(1, (now - t0)/duration);
+        const yr = Math.round(fromYear + k*(toYear - fromYear));
+        renderYearFn(yr);
+        if (k < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // ========= Slope chart (Top 10 absolute gainers) =========
+    function drawSlopeTopGainers(containerSel, countriesFeatures, year0, year1) {
+      const w = containerSel.node().clientWidth || 640;
+      const h = 360;
+      const margin = {top: 28, right: 80, bottom: 28, left: 80};
+
+      // Build data array: {iso, name, v0, v1, dv}
+      const data = countriesFeatures.map(f => {
+        const iso = getISO3(f);
+        const name = f.properties?.name || f.properties?.ADMIN || iso;
+        const v0 = val("ELEC", iso, year0);
+        const v1 = val("ELEC", iso, year1);
+        if (v0 == null || v1 == null) return null;
+        return { iso, name, v0, v1, dv: v1 - v0 };
+      }).filter(Boolean);
+
+      const top = data.sort((a,b) => d3.descending(a.dv, b.dv)).slice(0, 10).reverse(); // smallest of top at top
+
+      const x = d3.scaleLinear().domain([0, 100]).range([margin.left, w - margin.right]);
+      const y = d3.scalePoint().domain(top.map(d => d.name)).range([margin.top, h - margin.bottom]).padding(0.6);
+
+      const svg = containerSel.selectAll("svg").data([null]).join("svg").attr("width","100%").attr("height",h);
+
+      svg.selectAll("*").remove();
+
+      // axes
+      const gx = svg.append("g").attr("transform", `translate(0, ${h - margin.bottom})`).call(d3.axisBottom(x).ticks(5).tickFormat(d=>d+"%"));
+      gx.select(".domain").remove();
+      const gy = svg.append("g").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y).tickSize(0));
+      gy.select(".domain").remove();
+
+      // lines
+      svg.append("g").selectAll("line").data(top).join("line")
+        .attr("x1", d => x(d.v0)).attr("x2", d => x(d.v1))
+        .attr("y1", d => y(d.name)).attr("y2", d => y(d.name))
+        .attr("stroke", "#94a3b8").attr("stroke-width", 2).attr("opacity", .8);
+
+      // left dots
+      svg.append("g").selectAll("circle.l").data(top).join("circle")
+        .attr("cx", d => x(d.v0)).attr("cy", d => y(d.name)).attr("r", 4).attr("fill", "#64748b");
+      // right dots
+      svg.append("g").selectAll("circle.r").data(top).join("circle")
+        .attr("cx", d => x(d.v1)).attr("cy", d => y(d.name)).attr("r", 4).attr("fill", "#0ea5e9");
+
+      // labels on the right
+      svg.append("g").selectAll("text.lab").data(top).join("text")
+        .attr("x", d => x(d.v1) + 6).attr("y", d => y(d.name)).attr("dy",".32em")
+        .attr("font-size", 12).attr("fill", "#0f172a")
+        .text(d => `${d.name}  ${fmtPP(d.dv)}`);
+
+      // year labels
+      svg.append("text").attr("x", x(0)).attr("y", margin.top - 10).attr("font-size", 12).attr("fill","#64748b").text(String(year0));
+      svg.append("text").attr("x", x(100)).attr("y", margin.top - 10).attr("font-size", 12).attr("fill","#0ea5e9").attr("text-anchor","end").text(String(year1));
+    }
+
+    // ========= Scenes =========
+    SCENES.intro = () => {
+      // neutral map (light fill)
+      gCountries.selectAll("path.country").attr("fill", "#f1f5f9");
+      tooltip.style("opacity", 0);
+
+      // compute & update Intro tiles using population-weighted means
+      const year0 = SDG_START;
+      const year1 = latestCommonYear;
+
+      function weightedMean(code) {
+        let num = 0, den = 0;
+        for (const f of GEO.features) {
+          const iso = getISO3(f);
+          const v = val(code, iso, year1);
+          const p = pop(iso, year1);
+          if (v != null && p != null) { num += (v/100)*p; den += p; }
+        }
+        const meanLatest = den ? (num/den)*100 : null;
+
+        let n0 = 0, d0 = 0;
+        for (const f of GEO.features) {
+          const iso = getISO3(f);
+          const v = val(code, iso, year0);
+          const p = pop(iso, year0) ?? pop(iso, year1); // fallback
+          if (v != null && p != null) { n0 += (v/100)*p; d0 += p; }
+        }
+        const mean2015 = d0 ? (n0/d0)*100 : null;
+        return {mean2015, meanLatest};
+      }
+
+      const T = [
+        { id: "#tile-electricity", code: "ELEC" },
+        { id: "#tile-internet",   code: "NET"  },
+        { id: "#tile-water",      code: "WATER"},
+      ];
+      T.forEach(t => {
+        const {mean2015, meanLatest} = weightedMean(t.code);
+        const delta = (mean2015 != null && meanLatest != null) ? (meanLatest - mean2015) : null;
+        const tile = d3.select(t.id);
+        tile.select('[data-2015]').text(fmtPct(mean2015));
+        tile.select('[data-latest]').text(fmtPct(meanLatest));
+        tile.select('[data-delta]').text(delta==null ? "(—)" : `(${fmtPP(delta)})`);
+        tile.select('[data-yearnote]').text(`2015 → ${year1}`);
+      });
+
+      // legend off
+      d3.select("#legend").html('<div class="legend-row"><span class="legend-label">Scroll to begin →</span></div>');
+    };
+
+    SCENES.electricity = () => {
+      const y0 = SDG_START;
+      const y1 = Math.max(...DATA.ELEC.years.filter(y => y >= y0));
+      // fill countries if first time
+      setMapMetric_Electricity(y0);
+      attachTooltip("ELEC", y1);
+      // animate map to latest
+      animateYear(y0, y1, 1200, (yr) => setMapMetric_Electricity(yr));
+      // slope chart
+      drawSlopeTopGainers(d3.select("#slope"), GEO.features, y0, y1);
+      d3.select("#slope-title").text(`Top 10 countries by absolute gain since 2015 (to ${y1})`);
+    };
+
+    // ========= Init =========
+    (async function init() {
+      // 1) Load geo + datasets
+      GEO = await d3.json(GEO_FILE);
+      if (GEO.type !== "FeatureCollection") GEO = { type: "FeatureCollection", features: GEO.features || [] };
+
+      // Fit projection
+      const bbox = [[10,10],[Math.min(900, mapEl.node().clientWidth||900)-10, Math.max(380, Math.round(width * 0.55))-10]];
+      projection.fitExtent(bbox, GEO);
+
+      // Draw countries
+      const countries = gCountries.selectAll("path.country")
+        .data(GEO.features, d => getISO3(d))
+        .join("path").attr("class","country").attr("d", path).attr("stroke","#fff").attr("stroke-width",0.5).attr("fill","#f1f5f9");
+
+      // Zoom/pan
+      svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", (e) => gMain.attr("transform", e.transform)));
+
+      // Load indicators
+      const [ELEC, NET, WATER, POP] = await Promise.all([
+        loadWB(FILES.ELEC), loadWB(FILES.NET), loadWB(FILES.WATER), loadWB(FILES.POP)
+      ]);
+      DATA.ELEC = ELEC; DATA.NET = NET; DATA.WATER = WATER; DATA.POP = POP;
+
+      // common years across the three access metrics
+      const setI = a => new Set(a);
+      yearsCommon = [...[ELEC.years, NET.years, WATER.years].reduce((acc, ys) => {
+        return acc == null ? setI(ys) : new Set([...acc].filter(x => ys.includes(x)));
+      }, null)].filter(y => y >= SDG_START).sort((a,b)=>a-b);
+      latestCommonYear = yearsCommon.at(-1);
+
+      // Initial scene
+      SCENES.intro();
+
+      // Scroll handling
+      const steps = document.querySelectorAll('.step');
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const scene = entry.target.dataset.scene;
+            if (SCENES[scene]) SCENES[scene]();
+          }
+        });
+      }, { root: null, threshold: 0.6, rootMargin: "-10% 0% -10% 0%" });
+      steps.forEach(s => io.observe(s));
+    })().catch(err => {
+      console.error(err);
+      alert("Error initializing. See console for details.");
+    });
+  </script>
+</body>
+</html>
