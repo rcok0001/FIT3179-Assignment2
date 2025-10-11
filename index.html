@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>SDG Progress — Scrollytelling (Electricity + Internet + Water)</title>
+  <title>SDG Progress — Scrollytelling (Electricity + Internet + Water + SDG 8)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -15,7 +15,6 @@
       box-sizing: border-box;
     }
 
-    /* Blue background */
     body {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       margin: 0;
@@ -181,7 +180,6 @@
       z-index: 10;
     }
 
-    /* Viz containers */
     .viz-wrap {
       display: grid;
       gap: 8px;
@@ -193,7 +191,6 @@
       color: #475569;
     }
 
-    /* Legend styles */
     .legend-row {
       display: flex;
       align-items: center;
@@ -224,15 +221,14 @@
 <body>
   <header id="hero">
     <h1>Are We On Track for 2030? — Foundations of Access Since 2015</h1>
-    <p>We follow access to <strong>electricity</strong>, <strong>the internet</strong>, and <strong>safely managed
-        water</strong> since the SDGs began (2015).</p>
+    <p>We follow access to <strong>electricity</strong>, <strong>the internet</strong>, <strong>safely managed
+        water</strong>, and now <strong>SDG 8: growth</strong> since 2015.</p>
   </header>
 
   <main class="scrolly">
     <aside id="sticky-map">
       <div id="map"></div>
       <div id="legend"></div>
-      <!-- Year slider control -->
       <div id="year-control" hidden>
         <label for="year-range">Year: <span id="year-label">2015</span></label>
         <input id="year-range" type="range" min="2015" max="2015" value="2015" step="1" />
@@ -240,45 +236,37 @@
     </aside>
 
     <article id="story">
-      <!-- Section 0: Intro -->
+      <!-- Intro -->
       <section class="step" data-scene="intro">
         <h2>The 2015 Promise</h2>
-        <p>In 2015, countries adopted the Sustainable Development Goals. Since then, billions have seen improvements in
-          core living standards.
-          Below are population-weighted global averages from 2015 to the latest comparable year.</p>
+        <p>Population-weighted global averages from 2015 to the latest comparable year.</p>
         <div class="tiles" id="intro-tiles">
           <div class="tile" id="tile-electricity">
             <h3>Electricity access (SDG 7)</h3>
-            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span>
-              <span class="delta" data-delta>(+— pp)</span>
-            </div>
+            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta"
+                data-delta>(+— pp)</span></div>
             <div class="subtle" data-yearnote>2015 → —</div>
           </div>
           <div class="tile" id="tile-internet">
             <h3>Internet users (SDG 9)</h3>
-            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span>
-              <span class="delta" data-delta>(+— pp)</span>
-            </div>
+            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta"
+                data-delta>(+— pp)</span></div>
             <div class="subtle" data-yearnote>2015 → —</div>
           </div>
           <div class="tile" id="tile-water">
             <h3>Safely managed water (SDG 6)</h3>
-            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span>
-              <span class="delta" data-delta>(+— pp)</span>
-            </div>
+            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta"
+                data-delta>(+— pp)</span></div>
             <div class="subtle" data-yearnote>2015 → —</div>
           </div>
         </div>
-        <p class="subtle credits">Averages are population-weighted using <code>SP.POP.TOTL</code>. Latest year is the
-          overlap across all three metrics.</p>
+        <p class="subtle credits">Averages use <code>SP.POP.TOTL</code>; latest year is the overlap across metrics.</p>
       </section>
 
-      <!-- Section 1: Electricity -->
+      <!-- Electricity -->
       <section class="step" data-scene="electricity">
         <h2>Powering Progress — Electricity (SDG 7)</h2>
-        <p>Many countries made large gains in electricity access since 2015. Use the slider under the map to choose a
-          year; the chart
-          highlights the top absolute movers (2015 → latest).</p>
+        <p>Use the slider to choose a year; the chart shows top absolute movers (2015 → latest).</p>
         <div class="viz-wrap">
           <div class="viz-title" id="slope-title">Top 10 countries by absolute gain in electricity access since 2015
             (pp)</div>
@@ -286,32 +274,40 @@
         </div>
       </section>
 
-      <!-- Section 2: Internet -->
+      <!-- Internet -->
       <section class="step" data-scene="internet">
-        <h2>Going Online — Internet Adoption (SDG 9)</h2>
-        <p>The map shows <em>internet users (% of population)</em> for the selected year. Below, <strong>regional
-            boxplots</strong> compare
-          the distribution of country internet use in <strong>2015</strong> vs <strong>Latest</strong> (one facet per
-          region).</p>
+        <h2>Going Online — Internet (SDG 9)</h2>
+        <p>Map shows internet users (% of population) for the selected year. Below: regional boxplots (2015 vs latest).
+        </p>
         <div class="viz-wrap">
           <div class="viz-title" id="net-title">Internet users (%): distribution by region — 2015 vs Latest</div>
           <div id="net-boxplots"></div>
         </div>
       </section>
 
-      <!-- Section 3: Water -->
+      <!-- Water -->
       <section class="step" data-scene="water">
-        <h2>Safe to Drink — Safely Managed Water (SDG 6)</h2>
-        <p>The map now shows <em>safely managed drinking water (% of population)</em> for the selected year. The chart
-          below is a
-          <strong>2D binned heatmap</strong> comparing each country’s 2015 value (x-axis) to its latest value (y-axis).
-          Cells above the
-          diagonal indicate improvement; color encodes the <em>sum of population</em> in that bin.
+        <h2>Safe to Drink — Water (SDG 6)</h2>
+        <p>The chart shows a population-weighted CDF: for each x = % safely managed water, y = share of global
+          population living at or below x.</p>
+        <div class="viz-wrap">
+          <div class="viz-title" id="water-title">Safely managed water: population-weighted CDF — 2015 vs Latest</div>
+          <div id="water-heat"></div>
+        </div>
+      </section>
+
+      <!-- SDG 8 -->
+      <section class="step" data-scene="sdg8">
+        <h2>Decent Work & Growth — SDG 8</h2>
+        <p>The map switches to GDP per capita (constant US$, log scale). The chart relates prosperity to foundational
+          access:
+          <strong>GDP per capita (log)</strong> vs <strong>Electricity</strong>, <strong>Internet</strong>, and
+          <strong>Water</strong> (latest year),
+          sized by population and colored by region.
         </p>
         <div class="viz-wrap">
-          <div class="viz-title" id="water-title">Safely managed water: 2015 vs Latest — population-weighted 2D binned
-            heatmap</div>
-          <div id="water-heat"></div>
+          <div class="viz-title" id="sdg8-title">GDP per capita vs access (latest year): faceted by metric</div>
+          <div id="sdg8-scatter"></div>
         </div>
       </section>
     </article>
@@ -319,27 +315,32 @@
 
   <div id="tooltip" class="tooltip"></div>
 
-  <!-- D3 (CDN) -->
+  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-  <!-- Vega / Vega-Lite / Embed (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
 
   <script type="module">
-    // ========== FILES (adjust paths if needed) ==========
+    // ========== FILES ==========
     const GEO_FILE = "./custom.geo.json";
+
     const FILES = {
       ELEC: "data/EG.ELC.ACCS.ZS.csv",
       NET: "data/IT.NET.USER.ZS.csv",
       WATER: "data/SH.H2O.SMDW.ZS.csv",
-      POP: "data/SP.POP.TOTL.csv"
+      POP: "data/SP.POP.TOTL.csv",
+      GDPPC: "data/NY.GDP.PCAP.CD.csv"   // GDP per capita (current US$)
     };
 
-    // ========= Helpers =========
+  
+
+    // ========= Formatters =========
     const fmtPct = d => d == null ? "—" : d3.format(".1f")(d) + "%";
     const fmtPP = d => (d >= 0 ? "+" : "") + d3.format(".1f")(d) + " pp";
+    const fmtUSD0 = d => d == null ? "—" : "$" + d3.format(",.0f")(d);
 
+    // ========= Loader (World Bank CSV tolerant) =========
     async function loadWB(file) {
       const raw = await d3.text(file);
       const text = raw.replace(/^\uFEFF/, "");
@@ -353,6 +354,7 @@
       return { rows, years, byISO3 };
     }
 
+    // ========= Accessors =========
     function val(ind, iso3, year) {
       const row = DATA[ind].byISO3.get(iso3);
       if (!row) return null;
@@ -378,22 +380,16 @@
     }
     function getRegion(f) {
       const p = f.properties || {};
-      return (
-        p.region_wb || p.REGION_WB ||
-        p.region || p.REGION ||
-        p.continent || p.CONTINENT ||
-        "Other"
-      );
+      return (p.region_wb || p.REGION_WB || p.region || p.REGION || p.continent || p.CONTINENT || "Other");
     }
 
-    // ========= Global state =========
-    const DATA = {};        // { ELEC, NET, WATER, POP }
+    // ========= Global =========
+    const DATA = {};        // ELEC, NET, WATER, POP, GDPPC
     const SCENES = {};
     let GEO;
     let yearsCommon;
     let latestCommonYear;
     const SDG_START = 2015;
-
     let CURRENT_YEAR = SDG_START;
 
     // ========= Map setup =========
@@ -409,20 +405,27 @@
     const projection = d3.geoNaturalEarth1();
     const path = d3.geoPath(projection);
 
+    // Color scales
     const color = d3.scaleSequential().interpolator(d3.interpolateYlGnBu).domain([0, 100]);
+    const colorGDP = d3.scaleSequentialLog(d3.interpolatePuBuGn).domain([500, 60000]); // log scale for GDPpc
+
     const noDataColor = "#e0e0e0";
 
-    function renderLegendContinuous(domain = [0, 100], label = "%") {
+    // Legend (now accepts a color fn)
+    function renderLegendContinuous(domain = [0, 100], label = "%", colorFn = color) {
       const root = d3.select("#legend");
       root.html("");
       const w = 220, h = 12;
-      const svgL = root.append("svg").attr("width", w + 90).attr("height", 40);
+      const svgL = root.append("svg").attr("width", w + 120).attr("height", 42);
       const defs = svgL.append("defs");
       const id = "grad-" + Math.random().toString(36).slice(2);
       const grad = defs.append("linearGradient").attr("id", id);
       grad.selectAll("stop").data(d3.range(0, 1.0001, 0.1)).join("stop")
         .attr("offset", d => (d * 100) + "%")
-        .attr("stop-color", d => color(domain[0] + d * (domain[1] - domain[0])));
+        .attr("stop-color", d => {
+          const v = domain[0] + d * (domain[1] - domain[0]);
+          return colorFn(v);
+        });
       svgL.append("rect").attr("x", 10).attr("y", 10).attr("width", w).attr("height", h)
         .attr("fill", `url(#${id})`).attr("rx", 3).attr("stroke", "#e2e8f0");
       const scale = d3.scaleLinear().domain(domain).range([10, 10 + w]);
@@ -434,30 +437,34 @@
       svgL.append("text").attr("x", 10 + w + 26).attr("y", 33).attr("font-size", 11).text("No data");
     }
 
-    // ===== Map metric painters =====
+    // Map painters
     function setMapMetric_Electricity(year) {
       gCountries.selectAll("path.country").attr("fill", d => {
-        const iso = getISO3(d);
-        const v = val("ELEC", iso, year);
+        const v = val("ELEC", getISO3(d), year);
         return v == null ? noDataColor : color(Math.max(0, Math.min(100, v)));
       });
-      renderLegendContinuous([0, 100], "% access");
+      renderLegendContinuous([0, 100], "% access", color);
     }
     function setMapMetric_Internet(year) {
       gCountries.selectAll("path.country").attr("fill", d => {
-        const iso = getISO3(d);
-        const v = val("NET", iso, year);
+        const v = val("NET", getISO3(d), year);
         return v == null ? noDataColor : color(Math.max(0, Math.min(100, v)));
       });
-      renderLegendContinuous([0, 100], "% users");
+      renderLegendContinuous([0, 100], "% users", color);
     }
     function setMapMetric_Water(year) {
       gCountries.selectAll("path.country").attr("fill", d => {
-        const iso = getISO3(d);
-        const v = val("WATER", iso, year);
+        const v = val("WATER", getISO3(d), year);
         return v == null ? noDataColor : color(Math.max(0, Math.min(100, v)));
       });
-      renderLegendContinuous([0, 100], "% safely managed");
+      renderLegendContinuous([0, 100], "% safely managed", color);
+    }
+    function setMapMetric_GDPpc(year) {
+      gCountries.selectAll("path.country").attr("fill", d => {
+        const v = val("GDPPC", getISO3(d), year);
+        return v == null ? noDataColor : colorGDP(Math.max(500, Math.min(60000, v)));
+      });
+      renderLegendContinuous([500, 60000], "US$ (log scale)", colorGDP);
     }
 
     function attachTooltip(metricCode, year) {
@@ -469,44 +476,39 @@
           if (metricCode === "ELEC") { v = val("ELEC", iso, year); label = "Electricity access"; }
           if (metricCode === "NET") { v = val("NET", iso, year); label = "Internet users"; }
           if (metricCode === "WATER") { v = val("WATER", iso, year); label = "Safely managed water"; }
+          if (metricCode === "GDPPC") { v = val("GDPPC", iso, year); label = "GDP per capita (const US$)"; }
+          const valueTxt =
+            metricCode === "GDPPC" ? fmtUSD0(v) : fmtPct(v);
           tooltip
             .style("left", (event.clientX) + "px")
             .style("top", (event.clientY) + "px")
             .style("opacity", 1)
-            .html(`<strong>${name}</strong><br>${label}: ${fmtPct(v)} (${year})`);
+            .html(`<strong>${name}</strong><br>${label}: ${valueTxt} (${year})`);
         })
         .on("mouseout", () => tooltip.style("opacity", 0));
     }
 
-    // ========= Vega-Lite (Electricity lollipop) =========
-    async function drawElectricityLollipop(containerSelector, countriesFeatures, year0, year1) {
+    // ===== Vega-Lite charts already in your page (Electricity, Internet, Water) =====
+    async function drawElectricityLollipop(containerSelector, features, y0, y1) {
       const rows = [];
-      for (const f of countriesFeatures) {
-        const iso = getISO3(f);
-        const name = getName(f);
-        const v0 = val("ELEC", iso, year0);
-        const v1 = val("ELEC", iso, year1);
+      for (const f of features) {
+        const iso = getISO3(f), name = getName(f);
+        const v0 = val("ELEC", iso, y0), v1 = val("ELEC", iso, y1);
         if (v0 == null || v1 == null) continue;
         rows.push({ country: name, v2015: +v0, vLatest: +v1, dv: (+v1) - (+v0) });
       }
       const top = rows.sort((a, b) => d3.descending(a.dv, b.dv)).slice(0, 10).reverse();
-
-      const dataLong = top.flatMap(d => ([
+      const long = top.flatMap(d => ([
         { country: d.country, type: "2015", value: d.v2015, dv: null, dv_fmt: "" },
-        { country: d.country, type: "Latest", value: d.vLatest, dv: d.dv, dv_fmt: `${(d.dv >= 0 ? "+" : "")}${d.dv.toFixed(1)} pp` }
+        { country: d.country, type: "Latest", value: d.vLatest, dv: d.dv, dv_fmt: `${d.dv >= 0 ? "+" : ""}${d.dv.toFixed(1)} pp` }
       ]));
-
       const spec = {
         $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-        width: "container",
-        height: 420,
-        data: { values: dataLong },
-        encoding: {
-          y: { field: "country", type: "nominal", sort: top.map(d => d.country), axis: { title: null } }
-        },
+        width: "container", height: 420, data: { values: long },
+        encoding: { y: { field: "country", type: "nominal", sort: top.map(d => d.country), axis: { title: null } } },
         layer: [
           {
-            mark: { type: "rule", strokeWidth: 2, opacity: 0.6 },
+            mark: { type: "rule", strokeWidth: 2, opacity: .6 },
             encoding: {
               x: { aggregate: "min", field: "value", type: "quantitative", title: "% access", scale: { domain: [0, 100] } },
               x2: { aggregate: "max", field: "value", type: "quantitative" }
@@ -525,11 +527,7 @@
             mark: { type: "point", filled: true, size: 70, color: "#0ea5e9" },
             encoding: {
               x: { field: "value", type: "quantitative" },
-              tooltip: [
-                { field: "country" },
-                { field: "value", title: "Latest", format: ".1f" },
-                { field: "dv", title: "Δ (pp)", format: ".1f" }
-              ]
+              tooltip: [{ field: "country" }, { field: "value", title: "Latest", format: ".1f" }, { field: "dv", title: "Δ (pp)", format: ".1f" }]
             }
           },
           {
@@ -539,30 +537,22 @@
           }
         ]
       };
-
-      const el = document.querySelector(containerSelector);
-      el.innerHTML = "";
+      document.querySelector(containerSelector).innerHTML = "";
       await vegaEmbed(containerSelector, spec, { actions: false });
     }
 
-    // ========= Vega-Lite (Internet regional boxplots) =========
-    async function drawInternetRegionBoxplots(containerSelector, countriesFeatures, year0, year1) {
+    async function drawInternetRegionBoxplots(containerSelector, features, y0, y1) {
       const rows = [];
-      for (const f of countriesFeatures) {
-        const iso = getISO3(f);
-        const region = getRegion(f);
-        const v0 = val("NET", iso, year0);
-        const v1 = val("NET", iso, year1);
+      for (const f of features) {
+        const iso = getISO3(f), region = getRegion(f);
+        const v0 = val("NET", iso, y0), v1 = val("NET", iso, y1);
         if (v0 != null) rows.push({ region, year: "2015", value: +v0 });
         if (v1 != null) rows.push({ region, year: "Latest", value: +v1 });
       }
-      const regions = Array.from(new Set(rows.map(d => d.region))).sort();
-
+      const regions = [...new Set(rows.map(d => d.region))].sort();
       const spec = {
         $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-        width: 220,
-        height: 200,
-        data: { values: rows },
+        width: 220, height: 200, data: { values: rows },
         transform: [{ filter: "isFinite(datum.value)" }],
         facet: { column: { field: "region", type: "nominal", sort: regions } },
         spec: {
@@ -575,270 +565,212 @@
         },
         resolve: { scale: { y: "shared" } }
       };
-
-      const el = document.querySelector(containerSelector);
-      el.innerHTML = "";
+      document.querySelector(containerSelector).innerHTML = "";
       await vegaEmbed(containerSelector, spec, { actions: false });
     }
 
-    // ========= Vega-Lite (Water 2D binned heatmap) =========
-    // ========= Vega-Lite (Water: population-weighted CDF, 2015 vs Latest) =========
-    async function drawWaterCDF(containerSelector, countriesFeatures, year0, year1) {
-      // Gather per-country values + population
-      const rows2015 = [];
-      const rowsLatest = [];
-      let totalPop2015 = 0, totalPopLatest = 0;
-
-      for (const f of countriesFeatures) {
+    async function drawWaterCDF(containerSelector, features, y0, y1) {
+      const r0 = [], r1 = [];
+      let t0 = 0, t1 = 0;
+      for (const f of features) {
         const iso = getISO3(f);
-        const v0 = val("WATER", iso, year0);
-        const v1 = val("WATER", iso, year1);
-        const p0 = pop(iso, year0) ?? pop(iso, year1);
-        const p1 = pop(iso, year1) ?? pop(iso, year0);
-        if (v0 != null && p0 != null) { rows2015.push({ value: +v0, pop: +p0 }); totalPop2015 += +p0; }
-        if (v1 != null && p1 != null) { rowsLatest.push({ value: +v1, pop: +p1 }); totalPopLatest += +p1; }
+        const v0 = val("WATER", iso, y0), v1 = val("WATER", iso, y1);
+        const p0 = pop(iso, y0) ?? pop(iso, y1);
+        const p1 = pop(iso, y1) ?? pop(iso, y0);
+        if (v0 != null && p0 != null) { r0.push({ value: +v0, pop: +p0 }); t0 += +p0; }
+        if (v1 != null && p1 != null) { r1.push({ value: +v1, pop: +p1 }); t1 += +p1; }
       }
-
-      function toCDF(points, totalPop, label) {
-        // sort ascending by value, cumulate population share
+      function toCDF(points, total, label) {
         points.sort((a, b) => d3.ascending(a.value, b.value));
-        let cum = 0;
-        const out = [];
+        let cum = 0; const out = [];
         for (const pt of points) {
           cum += pt.pop;
-          out.push({
-            year: label,
-            value: Math.max(0, Math.min(100, pt.value)),
-            cum_share: (cum / totalPop) * 100
-          });
-        }
-        return out;
+          out.push({ year: label, value: Math.max(0, Math.min(100, pt.value)), cum_share: (cum / total) * 100 });
+        } return out;
       }
-
-      const cdf2015 = toCDF(rows2015, totalPop2015 || 1, "2015");
-      const cdfLatest = toCDF(rowsLatest, totalPopLatest || 1, "Latest");
-      const data = [...cdf2015, ...cdfLatest];
-
+      const data = [...toCDF(r0, t0 || 1, "2015"), ...toCDF(r1, t1 || 1, "Latest")];
       const spec = {
         $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-        width: "container",
-        height: 420,
-        data: { values: data },
+        width: "container", height: 420, data: { values: data },
         layer: [
-          // Lines (step-after so it looks like an empirical CDF)
           {
             mark: { type: "line", interpolate: "step-after", strokeWidth: 2 },
             encoding: {
               x: { field: "value", type: "quantitative", title: "% safely managed water", scale: { domain: [0, 100] } },
-              y: { field: "cum_share", type: "quantitative", title: "Population share at or below level (%)", scale: { domain: [0, 100] } },
+              y: { field: "cum_share", type: "quantitative", title: "Population share at or below (%)", scale: { domain: [0, 100] } },
               color: { field: "year", type: "nominal", scale: { range: ["#64748b", "#0ea5e9"] } },
-              tooltip: [
-                { field: "year", title: "Year" },
-                { field: "value", title: "% safely managed", format: ".1f" },
-                { field: "cum_share", title: "Cum. pop share (%)", format: ".1f" }
-              ]
+              tooltip: [{ field: "year" }, { field: "value", title: "%", format: ".1f" }, { field: "cum_share", title: "Cum. pop (%)", format: ".1f" }]
             }
           },
-          // Optional reference: vertical rule at 80%
-          {
-            data: { values: [{ x: 80 }] },
-            mark: { type: "rule", strokeDash: [4, 4], opacity: 0.6 },
-            encoding: {
-              x: { field: "x", type: "quantitative" }
-            }
-          }
+          { data: { values: [{ x: 80 }] }, mark: { type: "rule", strokeDash: [4, 4], opacity: .6 }, encoding: { x: { field: "x", type: "quantitative" } } }
         ]
       };
-
-      const el = document.querySelector(containerSelector);
-      el.innerHTML = "";
+      document.querySelector(containerSelector).innerHTML = "";
       await vegaEmbed(containerSelector, spec, { actions: false });
     }
 
+    // ===== NEW: SDG 8 faceted bubble scatter (GDPpc vs access, latest) =====
+    async function drawSDG8Scatter(containerSelector, features, yearLatest) {
+      const rows = [];
+      for (const f of features) {
+        const iso = getISO3(f), region = getRegion(f), name = getName(f);
+        const g = val("GDPPC", iso, yearLatest);
+        const p = pop(iso, yearLatest) ?? pop(iso, yearLatest - 1);
+        const e = val("ELEC", iso, yearLatest);
+        const n = val("NET", iso, yearLatest);
+        const w = val("WATER", iso, yearLatest);
+        if (g == null || p == null) continue;
+        if (e != null) rows.push({ country: name, region, metric: "Electricity", value: +e, gdppc: +g, pop: +p });
+        if (n != null) rows.push({ country: name, region, metric: "Internet", value: +n, gdppc: +g, pop: +p });
+        if (w != null) rows.push({ country: name, region, metric: "Water", value: +w, gdppc: +g, pop: +p });
+      }
 
-    // ========= Year control logic =========
-    function setYear_Electricity(year) {
+      const spec = {
+        $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+        width: 270,
+        height: 260,
+        data: { values: rows },
+        facet: { column: { field: "metric", type: "nominal", sort: ["Electricity", "Internet", "Water"] } },
+        spec: {
+          mark: { type: "point", filled: true, opacity: 0.9 },
+          encoding: {
+            x: {
+              field: "gdppc", type: "quantitative", title: "GDP per capita (constant US$)",
+              scale: { type: "log", domain: [500, 60000] },
+              axis: { tickCount: 5 }
+            },
+            y: {
+              field: "value", type: "quantitative", title: "% with access",
+              scale: { domain: [0, 100] }
+            },
+            size: {
+              field: "pop", type: "quantitative", title: "Population",
+              scale: { range: [10, 1000] }
+            },
+            color: { field: "region", type: "nominal" },
+            tooltip: [
+              { field: "country", title: "Country" },
+              { field: "region", title: "Region" },
+              { field: "gdppc", title: "GDP pc", format: ",.0f" },
+              { field: "value", title: "% access", format: ".1f" },
+              { field: "pop", title: "Population", format: ",.0f" }
+            ]
+          }
+        },
+        resolve: { scale: { y: "shared", x: "shared" } }
+      };
+
+      document.querySelector(containerSelector).innerHTML = "";
+      await vegaEmbed(containerSelector, spec, { actions: false });
+    }
+
+    // ========= Year control helpers =========
+    function syncYearUI(year) {
       CURRENT_YEAR = year;
-      setMapMetric_Electricity(year);
-      attachTooltip("ELEC", year);
       const lab = document.getElementById("year-label");
       if (lab) lab.textContent = String(year);
       const slider = document.getElementById("year-range");
       if (slider && +slider.value !== year) slider.value = String(year);
     }
-    function setYear_Internet(year) {
-      CURRENT_YEAR = year;
-      setMapMetric_Internet(year);
-      attachTooltip("NET", year);
-      const lab = document.getElementById("year-label");
-      if (lab) lab.textContent = String(year);
-      const slider = document.getElementById("year-range");
-      if (slider && +slider.value !== year) slider.value = String(year);
-    }
-    function setYear_Water(year) {
-      CURRENT_YEAR = year;
-      setMapMetric_Water(year);
-      attachTooltip("WATER", year);
-      const lab = document.getElementById("year-label");
-      if (lab) lab.textContent = String(year);
-      const slider = document.getElementById("year-range");
-      if (slider && +slider.value !== year) slider.value = String(year);
-    }
+    function setYear_Electricity(year) { setMapMetric_Electricity(year); attachTooltip("ELEC", year); syncYearUI(year); }
+    function setYear_Internet(year) { setMapMetric_Internet(year); attachTooltip("NET", year); syncYearUI(year); }
+    function setYear_Water(year) { setMapMetric_Water(year); attachTooltip("WATER", year); syncYearUI(year); }
+    function setYear_GDPpc(year) { setMapMetric_GDPpc(year); attachTooltip("GDPPC", year); syncYearUI(year); }
 
     // ========= Scenes =========
     SCENES.intro = () => {
-      gCountries.selectAll("path.country").attr("fill", "#f1f5f9");
-      tooltip.style("opacity", 0);
-
-      const year0 = SDG_START;
-      const year1 = latestCommonYear;
+      gCountries.selectAll("path.country").attr("fill", "#f1f5f9"); tooltip.style("opacity", 0);
+      const y0 = SDG_START, y1 = latestCommonYear;
 
       function weightedMean(code) {
-        let num = 0, den = 0;
+        let num = 0, den = 0, n0 = 0, d0 = 0;
         for (const f of GEO.features) {
           const iso = getISO3(f);
-          const v = val(code, iso, year1);
-          const p = pop(iso, year1);
+          const v = val(code, iso, y1), p = pop(iso, y1);
           if (v != null && p != null) { num += (v / 100) * p; den += p; }
+          const v0 = val(code, iso, y0), p0 = pop(iso, y0) ?? p;
+          if (v0 != null && p0 != null) { n0 += (v0 / 100) * p0; d0 += p0; }
         }
-        const meanLatest = den ? (num / den) * 100 : null;
-
-        let n0 = 0, d0 = 0;
-        for (const f of GEO.features) {
-          const iso = getISO3(f);
-          const v = val(code, iso, year0);
-          const p = pop(iso, year0) ?? pop(iso, year1);
-          if (v != null && p != null) { n0 += (v / 100) * p; d0 += p; }
-        }
-        const mean2015 = d0 ? (n0 / d0) * 100 : null;
-        return { mean2015, meanLatest };
+        return { mean2015: d0 ? (n0 / d0) * 100 : null, meanLatest: den ? (num / den) * 100 : null };
       }
-
-      const T = [
+      for (const t of [
         { id: "#tile-electricity", code: "ELEC" },
         { id: "#tile-internet", code: "NET" },
         { id: "#tile-water", code: "WATER" }
-      ];
-      T.forEach(t => {
+      ]) {
         const { mean2015, meanLatest } = weightedMean(t.code);
         const delta = (mean2015 != null && meanLatest != null) ? (meanLatest - mean2015) : null;
         const tile = d3.select(t.id);
         tile.select('[data-2015]').text(fmtPct(mean2015));
         tile.select('[data-latest]').text(fmtPct(meanLatest));
         tile.select('[data-delta]').text(delta == null ? "(—)" : `(${fmtPP(delta)})`);
-        tile.select('[data-yearnote]').text(`2015 → ${year1}`);
-      });
-
+        tile.select('[data-yearnote]').text(`2015 → ${y1}`);
+      }
       d3.select("#legend").html('<div class="legend-row"><span class="legend-label">Scroll to begin →</span></div>');
     };
 
     SCENES.electricity = () => {
-      const y0 = SDG_START;
-      const y1 = Math.max(...DATA.ELEC.years.filter(y => y >= y0));
-
-      renderLegendContinuous([0, 100], "% access");
-
-      const slider = document.getElementById("year-range");
-      const label = document.getElementById("year-label");
-      const ctl = document.getElementById("year-control");
-      slider.min = String(y0);
-      slider.max = String(y1);
-      slider.value = String(y1);
-      label.textContent = String(y1);
-      ctl.hidden = false;
-
+      const y0 = SDG_START, y1 = Math.max(...DATA.ELEC.years.filter(y => y >= y0));
+      const slider = document.getElementById("year-range"), label = document.getElementById("year-label"), ctl = document.getElementById("year-control");
+      slider.min = String(y0); slider.max = String(y1); slider.value = String(y1); label.textContent = String(y1); ctl.hidden = false;
       setYear_Electricity(y1);
-
-      let raf = null;
-      const onInput = () => {
-        const targetYear = +slider.value;
-        label.textContent = String(targetYear);
-        if (raf) cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => setYear_Electricity(targetYear));
-      };
-      slider.oninput = onInput;
-      slider.onchange = onInput;
-
+      let raf = null; const onInput = () => { const t = +slider.value; label.textContent = String(t); if (raf) cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setYear_Electricity(t)); };
+      slider.oninput = onInput; slider.onchange = onInput;
       slider.addEventListener("keydown", e => {
         if (e.key === "ArrowLeft") { e.preventDefault(); setYear_Electricity(Math.max(+slider.min, CURRENT_YEAR - 1)); }
         if (e.key === "ArrowRight") { e.preventDefault(); setYear_Electricity(Math.min(+slider.max, CURRENT_YEAR + 1)); }
       });
-
       drawElectricityLollipop("#slope", GEO.features, y0, y1);
       d3.select("#slope-title").text(`Top 10 countries by absolute gain in electricity access since 2015 (to ${y1})`);
     };
 
     SCENES.internet = async () => {
-      const y0 = SDG_START;
-      const y1 = Math.max(...DATA.NET.years.filter(y => y >= y0));
-
-      renderLegendContinuous([0, 100], "% users");
-
-      const slider = document.getElementById("year-range");
-      const label = document.getElementById("year-label");
-      const ctl = document.getElementById("year-control");
-      slider.min = String(y0);
-      slider.max = String(y1);
-      if (+slider.value > y1) slider.value = String(y1);
-      label.textContent = slider.value;
-      ctl.hidden = false;
-
+      const y0 = SDG_START, y1 = Math.max(...DATA.NET.years.filter(y => y >= y0));
+      const slider = document.getElementById("year-range"), label = document.getElementById("year-label"), ctl = document.getElementById("year-control");
+      slider.min = String(y0); slider.max = String(y1); if (+slider.value > y1) slider.value = String(y1); label.textContent = slider.value; ctl.hidden = false;
       setYear_Internet(+slider.value);
-
-      let raf = null;
-      const onInput = () => {
-        const targetYear = +slider.value;
-        label.textContent = String(targetYear);
-        if (raf) cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => setYear_Internet(targetYear));
-      };
-      slider.oninput = onInput;
-      slider.onchange = onInput;
-
+      let raf = null; const onInput = () => { const t = +slider.value; label.textContent = String(t); if (raf) cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setYear_Internet(t)); };
+      slider.oninput = onInput; slider.onchange = onInput;
       slider.addEventListener("keydown", e => {
         if (e.key === "ArrowLeft") { e.preventDefault(); setYear_Internet(Math.max(+slider.min, CURRENT_YEAR - 1)); }
         if (e.key === "ArrowRight") { e.preventDefault(); setYear_Internet(Math.min(+slider.max, CURRENT_YEAR + 1)); }
       });
-
       await drawInternetRegionBoxplots("#net-boxplots", GEO.features, y0, y1);
       d3.select("#net-title").text(`Internet users (%): distribution by region — 2015 vs ${y1}`);
     };
 
     SCENES.water = async () => {
-      const y0 = SDG_START;
-      const y1 = Math.max(...DATA.WATER.years.filter(y => y >= y0));
-
-      renderLegendContinuous([0, 100], "% safely managed");
-
-      const slider = document.getElementById("year-range");
-      const label = document.getElementById("year-label");
-      const ctl = document.getElementById("year-control");
-      slider.min = String(y0);
-      slider.max = String(y1);
-      if (+slider.value > y1) slider.value = String(y1);
-      label.textContent = slider.value;
-      ctl.hidden = false;
-
+      const y0 = SDG_START, y1 = Math.max(...DATA.WATER.years.filter(y => y >= y0));
+      const slider = document.getElementById("year-range"), label = document.getElementById("year-label"), ctl = document.getElementById("year-control");
+      slider.min = String(y0); slider.max = String(y1); if (+slider.value > y1) slider.value = String(y1); label.textContent = slider.value; ctl.hidden = false;
       setYear_Water(+slider.value);
-
-      let raf = null;
-      const onInput = () => {
-        const targetYear = +slider.value;
-        label.textContent = String(targetYear);
-        if (raf) cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => setYear_Water(targetYear));
-      };
-      slider.oninput = onInput;
-      slider.onchange = onInput;
-
+      let raf = null; const onInput = () => { const t = +slider.value; label.textContent = String(t); if (raf) cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setYear_Water(t)); };
+      slider.oninput = onInput; slider.onchange = onInput;
       slider.addEventListener("keydown", e => {
         if (e.key === "ArrowLeft") { e.preventDefault(); setYear_Water(Math.max(+slider.min, CURRENT_YEAR - 1)); }
         if (e.key === "ArrowRight") { e.preventDefault(); setYear_Water(Math.min(+slider.max, CURRENT_YEAR + 1)); }
       });
-
       await drawWaterCDF("#water-heat", GEO.features, y0, y1);
       d3.select("#water-title").text(`Safely managed water: population-weighted CDF — 2015 vs ${y1}`);
+    };
 
+    SCENES.sdg8 = async () => {
+      // Use GDP per capita timeline for slider & map
+      const y0 = Math.max(1980, SDG_START); // GDPpc series often goes far back; clamp at 2015 for consistency
+      const y1 = Math.max(...DATA.GDPPC.years.filter(y => y >= SDG_START));
+      const slider = document.getElementById("year-range"), label = document.getElementById("year-label"), ctl = document.getElementById("year-control");
+      slider.min = String(y0); slider.max = String(y1); if (+slider.value > y1) slider.value = String(y1); label.textContent = slider.value; ctl.hidden = false;
+      setYear_GDPpc(+slider.value);
+      let raf = null; const onInput = () => { const t = +slider.value; label.textContent = String(t); if (raf) cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setYear_GDPpc(t)); };
+      slider.oninput = onInput; slider.onchange = onInput;
+      slider.addEventListener("keydown", e => {
+        if (e.key === "ArrowLeft") { e.preventDefault(); setYear_GDPpc(Math.max(+slider.min, CURRENT_YEAR - 1)); }
+        if (e.key === "ArrowRight") { e.preventDefault(); setYear_GDPpc(Math.min(+slider.max, CURRENT_YEAR + 1)); }
+      });
+      // Chart uses the latest GDP/access overlap year
+      const latest = y1;
+      await drawSDG8Scatter("#sdg8-scatter", GEO.features, latest);
+      d3.select("#sdg8-title").text(`GDP per capita vs access (${latest}) — faceted by metric; circle size = population`);
     };
 
     // ========= Init =========
@@ -856,10 +788,10 @@
 
       svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", (e) => gMain.attr("transform", e.transform)));
 
-      const [ELEC, NET, WATER, POP] = await Promise.all([
-        loadWB(FILES.ELEC), loadWB(FILES.NET), loadWB(FILES.WATER), loadWB(FILES.POP)
+      const [ELEC, NET, WATER, POP, GDPPC] = await Promise.all([
+        loadWB(FILES.ELEC), loadWB(FILES.NET), loadWB(FILES.WATER), loadWB(FILES.POP), loadWB(FILES.GDPPC)
       ]);
-      DATA.ELEC = ELEC; DATA.NET = NET; DATA.WATER = WATER; DATA.POP = POP;
+      DATA.ELEC = ELEC; DATA.NET = NET; DATA.WATER = WATER; DATA.POP = POP; DATA.GDPPC = GDPPC;
 
       yearsCommon = [...[ELEC.years, NET.years, WATER.years].reduce((acc, ys) => {
         return acc == null ? new Set(ys) : new Set([...acc].filter(x => ys.includes(x)));
