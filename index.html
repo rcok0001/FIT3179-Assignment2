@@ -130,11 +130,11 @@
       <!-- Section 2: Internet -->
       <section class="step" data-scene="internet">
         <h2>Going Online — Internet Adoption (SDG 9)</h2>
-        <p>Internet use has accelerated in many countries. The map shows <em>internet users (% of population)</em> for the selected year.
-        Below, a lollipop chart shows the <strong>Top 15</strong> countries by absolute gain from 2015 to the latest year.</p>
+        <p>The map shows <em>internet users (% of population)</em> for the selected year. Below, <strong>regional boxplots</strong> compare
+        the distribution of country internet use in <strong>2015</strong> vs <strong>Latest</strong> (one facet per region).</p>
         <div class="viz-wrap">
-          <div class="viz-title" id="net-title">Top 15 countries by absolute gain in internet users since 2015 (pp)</div>
-          <div id="net-lollipop"></div>
+          <div class="viz-title" id="net-title">Internet users (%): distribution by region — 2015 vs Latest</div>
+          <div id="net-boxplots"></div>
         </div>
       </section>
     </article>
@@ -198,6 +198,15 @@
     }
     function getName(f) {
       return f.properties?.name || f.properties?.name_en || f.properties?.ADMIN || getISO3(f);
+    }
+    function getRegion(f) {
+      const p = f.properties || {};
+      return (
+        p.region_wb || p.REGION_WB ||
+        p.region || p.REGION ||
+        p.continent || p.CONTINENT ||
+        "Other"
+      );
     }
 
     // ========= Global state =========
@@ -345,62 +354,40 @@
       await vegaEmbed(containerSelector, spec, { actions: false });
     }
 
-    // ========= Vega-Lite (Internet lollipop) =========
-    async function drawInternetLollipop(containerSelector, countriesFeatures, year0, year1) {
+    // ========= Vega-Lite (Internet regional boxplots) =========
+    async function drawInternetRegionBoxplots(containerSelector, countriesFeatures, year0, year1) {
+      // Build long-form rows: one record per (country, region, year)
       const rows = [];
       for (const f of countriesFeatures) {
         const iso = getISO3(f);
-        const name = getName(f);
+        const region = getRegion(f);
         const v0 = val("NET", iso, year0);
         const v1 = val("NET", iso, year1);
-        if (v0 == null || v1 == null) continue;
-        rows.push({ country: name, v2015: +v0, vLatest: +v1, dv: (+v1) - (+v0) });
+        if (v0 != null) rows.push({ region, year: "2015",  value: +v0 });
+        if (v1 != null) rows.push({ region, year: "Latest", value: +v1 });
       }
-      const top = rows.sort((a,b) => d3.descending(a.dv, b.dv)).slice(0, 15).reverse();
 
-      const dataLong = top.flatMap(d => ([
-        { country: d.country, type: "2015",  value: d.v2015, dv: null, dv_fmt: "" },
-        { country: d.country, type: "Latest", value: d.vLatest, dv: d.dv, dv_fmt: `${(d.dv>=0?"+":"")}${d.dv.toFixed(1)} pp` }
-      ]));
+      // Sort regions alphabetically for stable facet order
+      const regions = Array.from(new Set(rows.map(d => d.region))).sort();
 
       const spec = {
         $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-        width: "container",
-        height: 520,
-        data: { values: dataLong },
-        encoding: {
-          y: { field: "country", type: "nominal", sort: top.map(d => d.country), axis: { title: null } }
-        },
-        layer: [
-          { mark: { type: "rule", strokeWidth: 2, opacity: 0.6 },
-            encoding: {
-              x:  { aggregate: "min", field: "value", type: "quantitative", title: "% users", scale: { domain: [0, 100] } },
-              x2: { aggregate: "max", field: "value", type: "quantitative" }
-            }
-          },
-          { transform: [{ filter: "datum.type === '2015'" }],
-            mark: { type: "point", filled: true, size: 60, color: "#64748b" },
-            encoding: {
-              x: { field: "value", type: "quantitative" },
-              tooltip: [{ field: "country" }, { field: "value", title: "2015", format: ".1f" }]
-            }
-          },
-          { transform: [{ filter: "datum.type === 'Latest'" }],
-            mark: { type: "point", filled: true, size: 70, color: "#0ea5e9" },
-            encoding: {
-              x: { field: "value", type: "quantitative" },
-              tooltip: [
-                { field: "country" },
-                { field: "value", title: "Latest", format: ".1f" },
-                { field: "dv", title: "Δ (pp)", format: ".1f" }
-              ]
-            }
-          },
-          { transform: [{ filter: "datum.type === 'Latest'" }],
-            mark: { type: "text", dx: 6, align: "left", baseline: "middle", fontSize: 11, color: "#0f172a" },
-            encoding: { x: { field: "value", type: "quantitative" }, text: { field: "dv_fmt" } }
+        width: 220,
+        height: 200,
+        data: { values: rows },
+        transform: [
+          { filter: "isFinite(datum.value)" }
+        ],
+        facet: { column: { field: "region", type: "nominal", sort: regions } },
+        spec: {
+          mark: { type: "boxplot", extent: "min-max", median: { color: "#0f172a" } },
+          encoding: {
+            x: { field: "year", type: "nominal", sort: ["2015","Latest"], axis: { title: null } },
+            y: { field: "value", type: "quantitative", title: "% users", scale: { domain: [0, 100] } },
+            color: { field: "year", type: "nominal", scale: { range: ["#64748b","#0ea5e9"] }, legend: { orient: "bottom" } }
           }
-        ]
+        },
+        resolve: { scale: { y: "shared" } }
       };
 
       const el = document.querySelector(containerSelector);
@@ -544,8 +531,9 @@
         if (e.key === "ArrowRight") { e.preventDefault(); setYear_Internet(Math.min(+slider.max, CURRENT_YEAR + 1)); }
       });
 
-      await drawInternetLollipop("#net-lollipop", GEO.features, y0, y1);
-      d3.select("#net-title").text(`Top 15 countries by absolute gain in internet users since 2015 (to ${y1})`);
+      // Internet: regional boxplots (2015 vs Latest)
+      await drawInternetRegionBoxplots("#net-boxplots", GEO.features, y0, y1);
+      d3.select("#net-title").text(`Internet users (%): distribution by region — 2015 vs ${y1}`);
     };
 
     // ========= Init =========
