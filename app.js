@@ -82,21 +82,28 @@ let CURRENT_YEAR = SDG_START;
 const mapEl = d3.select("#map");
 const tooltip = d3.select("#tooltip");
 
-const width = Math.min(900, mapEl.node().clientWidth || 900);
-const height = Math.max(380, Math.round(width * 0.55));
+// Create SVG once; size and projection will be managed via layout()
+const svg = mapEl.append("svg")
+  .attr("width", "100%")
+  .attr("height", "100%")
+  .attr("preserveAspectRatio", "xMidYMid meet");
 
-const svg = mapEl.append("svg").attr("width", "100%").attr("height", "100%");
 const gMain = svg.append("g");
 const gCountries = gMain.append("g");
+
 const projection = d3.geoNaturalEarth1();
 const path = d3.geoPath(projection);
+
+// Pan/zoom (we'll keep a handle so we can reset after refitting)
+const zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", (e) => gMain.attr("transform", e.transform));
+svg.call(zoom);
 
 // Color scales
 const color = d3.scaleSequential().interpolator(d3.interpolateYlGnBu).domain([0, 100]);
 const colorGDP = d3.scaleSequentialLog(d3.interpolatePuBuGn).domain([500, 60000]); // log scale for GDPpc
 const noDataColor = "#e0e0e0";
 
-// Legend (now accepts a color fn)
+// Legend (accepts a color fn)
 function renderLegendContinuous(domain = [0, 100], label = "%", colorFn = color) {
   const root = d3.select("#legend");
   root.html("");
@@ -172,7 +179,7 @@ function attachTooltip(metricCode, year) {
     .on("mouseout", () => tooltip.style("opacity", 0));
 }
 
-// ===== Vega-Lite charts already in your page (Electricity, Internet, Water) =====
+// ===== Vega-Lite charts (unchanged core specs) =====
 async function drawElectricityLollipop(containerSelector, features, y0, y1) {
   const rows = [];
   for (const f of features) {
@@ -191,31 +198,23 @@ async function drawElectricityLollipop(containerSelector, features, y0, y1) {
     width: "container", height: 420, data: { values: long },
     encoding: { y: { field: "country", type: "nominal", sort: top.map(d => d.country), axis: { title: null } } },
     layer: [
-      {
-        mark: { type: "rule", strokeWidth: 2, opacity: .6 },
+      { mark: { type: "rule", strokeWidth: 2, opacity: .6 },
         encoding: {
           x: { aggregate: "min", field: "value", type: "quantitative", title: "% access", scale: { domain: [0, 100] } },
           x2: { aggregate: "max", field: "value", type: "quantitative" }
         }
       },
-      {
-        transform: [{ filter: "datum.type === '2015'" }],
+      { transform: [{ filter: "datum.type === '2015'" }],
         mark: { type: "point", filled: true, size: 60, color: "#64748b" },
-        encoding: {
-          x: { field: "value", type: "quantitative" },
-          tooltip: [{ field: "country" }, { field: "value", title: "2015", format: ".1f" }]
-        }
+        encoding: { x: { field: "value", type: "quantitative" },
+          tooltip: [{ field: "country" }, { field: "value", title: "2015", format: ".1f" }] }
       },
-      {
-        transform: [{ filter: "datum.type === 'Latest'" }],
+      { transform: [{ filter: "datum.type === 'Latest'" }],
         mark: { type: "point", filled: true, size: 70, color: "#0ea5e9" },
-        encoding: {
-          x: { field: "value", type: "quantitative" },
-          tooltip: [{ field: "country" }, { field: "value", title: "Latest", format: ".1f" }, { field: "dv", title: "Δ (pp)", format: ".1f" }]
-        }
+        encoding: { x: { field: "value", type: "quantitative" },
+          tooltip: [{ field: "country" }, { field: "value", title: "Latest", format: ".1f" }, { field: "dv", title: "Δ (pp)", format: ".1f" }] }
       },
-      {
-        transform: [{ filter: "datum.type === 'Latest'" }],
+      { transform: [{ filter: "datum.type === 'Latest'" }],
         mark: { type: "text", dx: 6, align: "left", baseline: "middle", fontSize: 11, color: "#0f172a" },
         encoding: { x: { field: "value", type: "quantitative" }, text: { field: "dv_fmt" } }
       }
@@ -293,7 +292,7 @@ async function drawWaterCDF(containerSelector, features, y0, y1) {
   await vegaEmbed(containerSelector, spec, { actions: false });
 }
 
-// ===== NEW: SDG 8 faceted bubble scatter (GDPpc vs access, latest) =====
+// SDG 8 scatter
 async function drawSDG8Scatter(containerSelector, features, yearLatest) {
   const rows = [];
   for (const f of features) {
@@ -311,26 +310,14 @@ async function drawSDG8Scatter(containerSelector, features, yearLatest) {
 
   const spec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    width: 270,
-    height: 260,
-    data: { values: rows },
+    width: 270, height: 260, data: { values: rows },
     facet: { column: { field: "metric", type: "nominal", sort: ["Electricity", "Internet", "Water"] } },
     spec: {
       mark: { type: "point", filled: true, opacity: 0.9 },
       encoding: {
-        x: {
-          field: "gdppc", type: "quantitative", title: "GDP per capita (constant US$)",
-          scale: { type: "log", domain: [500, 60000] },
-          axis: { tickCount: 5 }
-        },
-        y: {
-          field: "value", type: "quantitative", title: "% with access",
-          scale: { domain: [0, 100] }
-        },
-        size: {
-          field: "pop", type: "quantitative", title: "Population",
-          scale: { range: [10, 1000] }
-        },
+        x: { field: "gdppc", type: "quantitative", title: "GDP per capita (constant US$)", scale: { type: "log", domain: [500, 60000] }, axis: { tickCount: 5 } },
+        y: { field: "value", type: "quantitative", title: "% with access", scale: { domain: [0, 100] } },
+        size: { field: "pop", type: "quantitative", title: "Population", scale: { range: [10, 1000] } },
         color: { field: "region", type: "nominal" },
         tooltip: [
           { field: "country", title: "Country" },
@@ -439,7 +426,6 @@ SCENES.water = async () => {
 };
 
 SCENES.sdg8 = async () => {
-  // Use GDP per capita timeline for slider & map
   const y0 = Math.max(1980, SDG_START);
   const y1 = Math.max(...DATA.GDPPC.years.filter(y => y >= SDG_START));
   const slider = document.getElementById("year-range"), label = document.getElementById("year-label"), ctl = document.getElementById("year-control");
@@ -451,28 +437,84 @@ SCENES.sdg8 = async () => {
     if (e.key === "ArrowLeft") { e.preventDefault(); setYear_GDPpc(Math.max(+slider.min, CURRENT_YEAR - 1)); }
     if (e.key === "ArrowRight") { e.preventDefault(); setYear_GDPpc(Math.min(+slider.max, CURRENT_YEAR + 1)); }
   });
-  // Chart uses the latest GDP/access overlap year
   const latest = y1;
   await drawSDG8Scatter("#sdg8-scatter", GEO.features, latest);
   d3.select("#sdg8-title").text(`GDP per capita vs access (${latest}) — faceted by metric; circle size = population`);
 };
 
+// ========= Theme + active step handling =========
+function setThemeForScene(scene) {
+  const body = document.body;
+  body.classList.remove("theme-6", "theme-7", "theme-8", "theme-9");
+  if (scene === "water") body.classList.add("theme-6");
+  if (scene === "electricity") body.classList.add("theme-7");
+  if (scene === "sdg8") body.classList.add("theme-8");
+  if (scene === "internet") body.classList.add("theme-9");
+}
+
+function setActiveStep(el) {
+  document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+  el?.classList.add("active");
+}
+
+// ========= Layout & resize handling (RECENTER + SLIGHT ZOOM OUT) =========
+function layoutAndFit() {
+  const node = mapEl.node();
+  if (!node || !GEO) return;
+
+  const rect = node.getBoundingClientRect();
+  const width = Math.max(320, Math.floor(rect.width));
+  const height = Math.max(380, Math.round(width * 0.58)); // slightly taller aspect than before
+
+  // Drive the SVG's internal coordinate system
+  svg.attr("viewBox", `0 0 ${width} ${height}`);
+
+  // Fit with symmetric padding, then zoom out a touch
+  const PAD = 20;         // inner padding so coasts don't touch edges
+  const ZOOM_OUT = 1.10;  // start slightly zoomed out
+
+  projection.fitExtent([[PAD, PAD], [width - PAD, height - PAD]], GEO);
+  projection.scale(projection.scale() * ZOOM_OUT);
+
+  // Clear any panning/zoom transform that might offset the map
+  svg.call(zoom.transform, d3.zoomIdentity);
+  gMain.attr("transform", null);
+
+  // Redraw the country paths with the updated projection
+  gCountries.selectAll("path.country").attr("d", path);
+}
+
+// Simple debounce for resize
+function debounce(fn, ms = 150) {
+  let t = null;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), ms); };
+}
+
 // ========= Init =========
 (async function init() {
   try {
-    GEO = await d3.json(GEO_FILE);
-    if (GEO.type !== "FeatureCollection") GEO = { type: "FeatureCollection", features: GEO.features || [] };
+    const GEOraw = await d3.json(GEO_FILE);
+    GEO = (GEOraw && GEOraw.type === "FeatureCollection")
+      ? GEOraw
+      : { type: "FeatureCollection", features: GEOraw.features || [] };
 
-    const bbox = [[10, 10], [Math.min(900, mapEl.node().clientWidth || 900) - 10, Math.max(380, Math.round(width * 0.55)) - 10]];
-    projection.fitExtent(bbox, GEO);
-
+    // Draw initial paths (stroke, class) — actual geometry 'd' set in layoutAndFit()
     gCountries.selectAll("path.country")
       .data(GEO.features, d => getISO3(d))
       .join("path")
-      .attr("class", "country").attr("d", path).attr("stroke", "#fff").attr("stroke-width", 0.5).attr("fill", "#f1f5f9");
+      .attr("class", "country")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 0.5)
+      .attr("fill", "#f1f5f9");
 
-    svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", (e) => gMain.attr("transform", e.transform)));
+    // Initial layout/fitting + resize handling
+    layoutAndFit();
+    window.addEventListener("resize", debounce(layoutAndFit, 150));
 
+    // Enable pan/zoom
+    svg.call(zoom);
+
+    // Load datasets
     const [ELEC, NET, WATER, POP, GDPPC] = await Promise.all([
       loadWB(FILES.ELEC), loadWB(FILES.NET), loadWB(FILES.WATER), loadWB(FILES.POP), loadWB(FILES.GDPPC)
     ]);
@@ -483,18 +525,27 @@ SCENES.sdg8 = async () => {
     }, null)].filter(y => y >= SDG_START).sort((a, b) => a - b);
     latestCommonYear = yearsCommon.at(-1);
 
+    // Initial scene
     SCENES.intro();
+    setThemeForScene("water"); // set a sensible default theme until first step hits
 
-    const steps = document.querySelectorAll('.step');
+    // Intersection Observer to trigger scenes + theme + active border
+    const steps = document.querySelectorAll(".step");
     const io = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const scene = entry.target.dataset.scene;
+          setActiveStep(entry.target);
           if (SCENES[scene]) SCENES[scene]();
+          // Update theme only for SDG scenes
+          if (scene === "water" || scene === "electricity" || scene === "sdg8" || scene === "internet") {
+            setThemeForScene(scene);
+          }
         }
       });
     }, { root: null, threshold: 0.6, rootMargin: "-10% 0% -10% 0%" });
     steps.forEach(s => io.observe(s));
+
   } catch (err) {
     console.error(err);
     alert("Error initializing. See console for details.");

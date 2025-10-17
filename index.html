@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>SDG Progress — Scrollytelling (Electricity + Internet + Water + SDG 8)</title>
+  <title>SDG Progress — Scrollytelling (Water + Electricity + SDG 8 + Internet)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <header id="hero">
     <h1>Are We On Track for 2030? — Foundations of Access Since 2015</h1>
-    <p>We follow access to <strong>electricity</strong>, <strong>the internet</strong>, <strong>safely managed
-        water</strong>, and now <strong>SDG 8: growth</strong> since 2015.</p>
+    <p>We follow access to <strong>water</strong>, <strong>electricity</strong>, <strong>SDG 8: growth</strong>, and <strong>the internet</strong> since 2015.</p>
   </header>
 
   <!-- SDG explainer banner -->
@@ -26,7 +25,15 @@
 
   <main class="scrolly">
     <aside id="sticky-map">
-      <div id="map"></div>
+      <!-- Map with heading and subheading -->
+      <div id="map-container">
+        <div id="map-header">
+          <h3>Global Access Map</h3>
+          <p>This choropleth updates automatically as you scroll through the SDGs, showing each goal’s latest progress.</p>
+        </div>
+        <div id="map"></div>
+      </div>
+
       <div id="legend"></div>
       <div id="year-control" hidden>
         <label for="year-range">Year: <span id="year-label">2015</span></label>
@@ -39,75 +46,76 @@
       <section class="step" data-scene="intro">
         <h2>The 2015 Promise</h2>
         <p>Population-weighted global averages from 2015 to the latest comparable year.</p>
+
+        <!-- Intro tiles: SDG 6 → 7 → 9 -->
         <div class="tiles" id="intro-tiles">
+          <div class="tile" id="tile-water">
+            <h3>Safely managed water (SDG 6)</h3>
+            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta" data-delta>(+— pp)</span></div>
+            <div class="subtle" data-yearnote>2015 → —</div>
+          </div>
           <div class="tile" id="tile-electricity">
             <h3>Electricity access (SDG 7)</h3>
-            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta"
-                data-delta>(+— pp)</span></div>
+            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta" data-delta>(+— pp)</span></div>
             <div class="subtle" data-yearnote>2015 → —</div>
           </div>
           <div class="tile" id="tile-internet">
             <h3>Internet users (SDG 9)</h3>
-            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta"
-                data-delta>(+— pp)</span></div>
-            <div class="subtle" data-yearnote>2015 → —</div>
-          </div>
-          <div class="tile" id="tile-water">
-            <h3>Safely managed water (SDG 6)</h3>
-            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta"
-                data-delta>(+— pp)</span></div>
+            <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta" data-delta>(+— pp)</span></div>
             <div class="subtle" data-yearnote>2015 → —</div>
           </div>
         </div>
+
         <p class="subtle credits">Averages use <code>SP.POP.TOTL</code>; latest year is the overlap across metrics.</p>
       </section>
 
-      <!-- Electricity -->
-      <section class="step" data-scene="electricity">
-        <h2>Powering Progress — Electricity (SDG 7)</h2>
-        <p>Use the slider to choose a year; the chart shows top absolute movers (2015 → latest).</p>
-        <div class="viz-wrap">
-          <div class="viz-title" id="slope-title">Top 10 countries by absolute gain in electricity access since 2015
-            (pp)</div>
-          <div id="slope"></div>
-        </div>
-      </section>
+      <!-- Purple grouping for SDGs 6–9 -->
+      <section class="sdg-band" aria-label="Grouped SDGs 6 to 9">
+        <div class="band-title"><strong>Basics &amp; Infrastructure</strong></div>
 
-      <!-- Internet -->
-      <section class="step" data-scene="internet">
-        <h2>Going Online — Internet (SDG 9)</h2>
-        <p>Map shows internet users (% of population) for the selected year. Below: regional boxplots (2015 vs latest).
-        </p>
-        <div class="viz-wrap">
-          <div class="viz-title" id="net-title">Internet users (%): distribution by region — 2015 vs Latest</div>
-          <div id="net-boxplots"></div>
-        </div>
-      </section>
+        <!-- SDG 6 -->
+        <section class="step" data-scene="water">
+          <h2>Safe to Drink — Water (SDG 6)</h2>
+          <p>The chart shows a population-weighted CDF: for each x = % safely managed water, y = share of global
+            population living at or below x.</p>
+          <div class="viz-wrap">
+            <div class="viz-title" id="water-title">Safely managed water: population-weighted CDF — 2015 vs Latest</div>
+            <div id="water-heat"></div>
+          </div>
+        </section>
 
-      <!-- Water -->
-      <section class="step" data-scene="water">
-        <h2>Safe to Drink — Water (SDG 6)</h2>
-        <p>The chart shows a population-weighted CDF: for each x = % safely managed water, y = share of global
-          population living at or below x.</p>
-        <div class="viz-wrap">
-          <div class="viz-title" id="water-title">Safely managed water: population-weighted CDF — 2015 vs Latest</div>
-          <div id="water-heat"></div>
-        </div>
-      </section>
+        <!-- SDG 7 -->
+        <section class="step" data-scene="electricity">
+          <h2>Powering Progress — Electricity (SDG 7)</h2>
+          <p>Use the slider to choose a year; the chart shows top absolute movers (2015 → latest).</p>
+          <div class="viz-wrap">
+            <div class="viz-title" id="slope-title">Top 10 countries by absolute gain in electricity access since 2015 (pp)</div>
+            <div id="slope"></div>
+          </div>
+        </section>
 
-      <!-- SDG 8 -->
-      <section class="step" data-scene="sdg8">
-        <h2>Decent Work & Growth — SDG 8</h2>
-        <p>The map switches to GDP per capita (constant US$, log scale). The chart relates prosperity to foundational
-          access:
-          <strong>GDP per capita (log)</strong> vs <strong>Electricity</strong>, <strong>Internet</strong>, and
-          <strong>Water</strong> (latest year),
-          sized by population and colored by region.
-        </p>
-        <div class="viz-wrap">
-          <div class="viz-title" id="sdg8-title">GDP per capita vs access (latest year): faceted by metric</div>
-          <div id="sdg8-scatter"></div>
-        </div>
+        <!-- SDG 8 -->
+        <section class="step" data-scene="sdg8">
+          <h2>Decent Work & Growth — SDG 8</h2>
+          <p>The map switches to GDP per capita (constant US$, log scale). The chart relates prosperity to foundational
+            access: <strong>GDP per capita (log)</strong> vs <strong>Electricity</strong>, <strong>Internet</strong>, and
+            <strong>Water</strong> (latest year), sized by population and colored by region.
+          </p>
+          <div class="viz-wrap">
+            <div class="viz-title" id="sdg8-title">GDP per capita vs access (latest year): faceted by metric</div>
+            <div id="sdg8-scatter"></div>
+          </div>
+        </section>
+
+        <!-- SDG 9 -->
+        <section class="step" data-scene="internet">
+          <h2>Going Online — Internet (SDG 9)</h2>
+          <p>Map shows internet users (% of population) for the selected year. Below: regional boxplots (2015 vs latest).</p>
+          <div class="viz-wrap">
+            <div class="viz-title" id="net-title">Internet users (%): distribution by region — 2015 vs Latest</div>
+            <div id="net-boxplots"></div>
+          </div>
+        </section>
       </section>
     </article>
   </main>
