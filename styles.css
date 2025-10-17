@@ -63,6 +63,7 @@ header#hero h1 {
 
 header#hero p { margin: 0; color: #475569; }
 
+/* MAIN GRID */
 main.scrolly {
   display: grid;
   grid-template-columns: minmax(320px, 540px) minmax(0, 1fr);
@@ -73,12 +74,14 @@ main.scrolly {
   margin-inline: auto;
 }
 
+/* Ensure grid children can't force overflow */
 #sticky-map, #story { min-width: 0; }
 
 @media (max-width: 980px) {
   main.scrolly { grid-template-columns: 1fr; }
 }
 
+/* Sticky map panel */
 #sticky-map {
   position: sticky;
   top: 68px;
@@ -90,6 +93,7 @@ main.scrolly {
   overflow: hidden;
 }
 
+/* Map container uses theme vars */
 #map-container {
   display: flex;
   flex-direction: column;
@@ -135,6 +139,7 @@ main.scrolly {
 #year-control label { font-size: 12px; color: #475569; display: block; margin-bottom: 6px; }
 #year-range { width: 100%; }
 
+/* RIGHT COLUMN — prevent overflow into the gutter */
 #story {
   padding: 20px;
   display: grid;
@@ -143,6 +148,7 @@ main.scrolly {
   max-width: 100%;
 }
 
+/* Step panels */
 .step {
   background: #fff;
   border: 2px solid #e2e8f0;
@@ -166,6 +172,7 @@ main.scrolly {
 .viz-wrap { display: grid; gap: 8px; margin-top: 8px; }
 .viz-title { font-size: 14px; color: #475569; }
 
+/* Ensure Vega containers never collapse */
 .viz-wrap > #slope,
 .viz-wrap > #net-boxplots,
 .viz-wrap > #water-heat,
@@ -196,6 +203,7 @@ main.scrolly {
   background: var(--accent);
 }
 
+/* Stat tiles */
 .tiles {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -220,6 +228,7 @@ main.scrolly {
 .delta { color: #059669; font-weight: 600; margin-left: 6px; }
 .subtle { color: #64748b; font-size: 12px; }
 
+/* Tooltip */
 .tooltip {
   position: fixed;
   pointer-events: none;
@@ -239,6 +248,7 @@ main.scrolly {
 .legend-label { font-size: 12px; color: #475569; }
 .credits { color: #64748b; font-size: 12px; margin-top: 6px; }
 
+/* SDG band grouping */
 .sdg-band {
   margin: 0 var(--gutter);
   padding: 16px;

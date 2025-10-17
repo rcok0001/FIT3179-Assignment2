@@ -586,93 +586,125 @@ async function drawWaterTopImprovers(containerSelector, features, baseYear = SDG
   }
 }
 
-// SDG 8 scatter
+// SDG 8 scatter — single plot, nearest-year alignment, legends below
 async function drawSDG8Scatter(containerSelector, features, yearLatest) {
+  // helper: nearest non-null value for any indicator in DATA[...] (±window yrs)
+  function nearestVal(indKey, iso, target, window = 3, preferFuture = true) {
+    // exact
+    let v = val(indKey, iso, target);
+    if (v != null) return [target, v];
+    for (let r = 1; r <= window; r++) {
+      const cand = preferFuture ? [target + r, target - r] : [target - r, target + r];
+      for (const y of cand) {
+        v = val(indKey, iso, y);
+        if (v != null) return [y, v];
+      }
+    }
+    return [null, null];
+  }
+  // helper: nearest population
+  function nearestPop(iso, target, window = 2, preferFuture = true) {
+    let p = pop(iso, target);
+    if (p != null) return [target, p];
+    for (let r = 1; r <= window; r++) {
+      const cand = preferFuture ? [target + r, target - r] : [target - r, target + r];
+      for (const y of cand) {
+        p = pop(iso, y);
+        if (p != null) return [y, p];
+      }
+    }
+    return [null, null];
+  }
+
+  const metricMap = {
+    Electricity: "ELEC",
+    Internet: "NET",
+    Water: "WATER"
+  };
+
   const rows = [];
   for (const f of features) {
-    const iso = getISO3(f),
-      region = getRegion(f),
-      name = getName(f);
-    const g = val("GDPPC", iso, yearLatest);
-    const p = pop(iso, yearLatest) ?? pop(iso, yearLatest - 1);
-    const e = val("ELEC", iso, yearLatest);
-    const n = val("NET", iso, yearLatest);
-    const w = val("WATER", iso, yearLatest);
-    if (g == null || p == null) continue;
-    if (e != null)
+    const iso = getISO3(f), region = getRegion(f), name = getName(f);
+
+    // Try all three metrics, aligned to their own nearest year around yearLatest
+    for (const [metricName, key] of Object.entries(metricMap)) {
+      const [mYear, mVal] = nearestVal(key, iso, yearLatest, 3, true);
+      if (mYear == null || mVal == null) continue;
+
+      // Align GDPpc & Pop to the metric's year (nearest values)
+      const [gYear, gVal] = nearestVal("GDPPC", iso, mYear, 2, true);
+      const [pYear, pVal] = nearestPop(iso, mYear, 2, true);
+      if (gYear == null || gVal == null || pYear == null || pVal == null) continue;
+
       rows.push({
         country: name,
         region,
-        metric: "Electricity",
-        value: +e,
-        gdppc: +g,
-        pop: +p
+        metric: metricName,
+        value: +mVal,       // % access
+        gdppc: +gVal,       // GDP per capita (current US$ in your file)
+        pop: +pVal,         // population
+        year_metric: mYear, // for tooltip context
+        year_gdp: gYear,
+        year_pop: pYear
       });
-    if (n != null)
-      rows.push({
-        country: name,
-        region,
-        metric: "Internet",
-        value: +n,
-        gdppc: +g,
-        pop: +p
-      });
-    if (w != null)
-      rows.push({
-        country: name,
-        region,
-        metric: "Water",
-        value: +w,
-        gdppc: +g,
-        pop: +p
-      });
+    }
   }
 
   const spec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    width: 270,
-    height: 260,
+    autosize: { type: "fit-x", contains: "padding" },
+    width: "container",
+    height: 420,
+    padding: { top: 10, left: 5, right: 5, bottom: 30 }, // room for bottom legends
     data: { values: rows },
-    facet: {
-      column: {
-        field: "metric",
-        type: "nominal",
-        sort: ["Electricity", "Internet", "Water"]
-      }
+
+    // Metric selector (default "Internet")
+    params: [{
+      name: "metricSel",
+      value: "Internet",
+      bind: { input: "select", options: ["Electricity", "Internet", "Water"], name: "Metric: " }
+    }],
+
+    transform: [
+      { filter: "datum.metric === metricSel" },
+      { filter: "isValid(datum.gdppc) && datum.gdppc <= 100000" }  // ← add this
+    ],
+
+
+    mark: { type: "point", filled: true, opacity: 0.9 },
+    encoding: {
+    x: {
+      field: "gdppc",
+      type: "quantitative",
+      title: "GDP per capita (US$)",
+      scale: { type: "linear", nice: true, zero: false },  // no domain/domainMax here
+      axis: { tickCount: 6 }
     },
-    spec: {
-      mark: { type: "point", filled: true, opacity: 0.9 },
-      encoding: {
-        x: {
-          field: "gdppc",
-          type: "quantitative",
-          title: "GDP per capita (constant US$)",
-          scale: { type: "log", domain: [500, 60000] },
-          axis: { tickCount: 5 }
-        },
-        y: {
-          field: "value",
-          type: "quantitative",
-          title: "% with access",
-          scale: { domain: [0, 100] }
-        },
-        size: {
-          field: "pop",
-          type: "quantitative",
-          title: "Population",
-          scale: { range: [10, 1000] }
-        },
-        color: { field: "region", type: "nominal" },
-        tooltip: [
-          { field: "country", title: "Country" },
-          { field: "region", title: "Region" },
-          { field: "gdppc", title: "GDP pc", format: ",.0f" },
-          { field: "value", title: "% access", format: ".1f" },
-          { field: "pop", title: "Population", format: ",.0f" }
-        ]
-      }
-    },
-    resolve: { scale: { y: "shared", x: "shared" } }
+
+      y: {
+        field: "value", type: "quantitative",
+        title: "% with access", scale: { domain: [0, 100] }
+      },
+      size: {
+        field: "pop", type: "quantitative", title: "Population",
+        scale: { range: [20, 1200] },
+        legend: { orient: "bottom", direction: "horizontal", titleFontSize: 11, labelFontSize: 10 }
+      },
+      color: {
+        field: "region", type: "nominal", title: "Region",
+        legend: { orient: "bottom", direction: "horizontal", columns: 3, symbolType: "circle", titleFontSize: 11, labelFontSize: 10 }
+      },
+      tooltip: [
+        { field: "country", title: "Country" },
+        { field: "region",  title: "Region" },
+        { field: "gdppc",   title: "GDP pc (US$)", format: ",.0f" },
+        { field: "value",   title: "% access", format: ".1f" },
+        { field: "pop",     title: "Population", format: ",.0f" },
+        { field: "year_metric", title: "Metric year" },
+        { field: "year_gdp",    title: "GDP year" },
+        { field: "year_pop",    title: "Pop year" }
+      ]
+    }
   };
 
   const el = document.querySelector(containerSelector);
@@ -684,6 +716,8 @@ async function drawSDG8Scatter(containerSelector, features, yearLatest) {
     console.error("vegaEmbed failed:", e);
   }
 }
+
+
 
 // ========= Year control helpers =========
 function syncYearUI(year) {
