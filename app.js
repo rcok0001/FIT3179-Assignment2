@@ -986,6 +986,8 @@ function showAnnotation_SDG9() {
     }
   ];
 
+  
+
   for (const t of picks) {
     const feature = GEO.features.find(f => getISO3(f) === t.iso);
     if (!feature) continue;
@@ -1007,6 +1009,91 @@ function showAnnotation_SDG9() {
   }
 }
 
+// SDG8 annotations — Afghanistan + Monaco (GDP per capita)
+function showAnnotation_SDG8() {
+  if (!GEO) return;
+  clearAnnotations();
+
+  const picks = [
+    {
+      iso: "AFG",
+      title: "Afghanistan has the lowest GPD pc outside of Africa",
+      dx: -140,  // adjust as needed for your layout
+      dy: 250,
+      color: "#10b981" // green
+    },
+    {
+      iso: "MCO",
+      title: "Monaco — very high income",
+      dx: -140,
+      dy: 170,
+      color: "#10b981"
+    }
+  ];
+
+  for (const t of picks) {
+    const feature = GEO.features.find(f => getISO3(f) === t.iso);
+    if (!feature) continue;
+
+    const [cx, cy] = path.centroid(feature);
+    // nearest available GDPpc value to CURRENT_YEAR within ±2 years (prefer future)
+    const [yGDP, gdp] = getNearestYearValue("GDPPC", t.iso, CURRENT_YEAR, 2, true);
+    const valueText = gdp == null ? "—" : fmtUSD0(gdp);
+
+    renderCallout(
+      [cx, cy],
+      [
+        t.title,
+        `GDP per capita: ${valueText}`,
+        `Year: ${yGDP ?? CURRENT_YEAR}`
+      ],
+      { dx: t.dx, dy: t.dy, color: t.color }
+    );
+  }
+}
+
+// SDG6 annotations — Iceland + Chad (Access to safely managed water)
+function showAnnotation_SDG6() {
+  if (!GEO) return;
+  clearAnnotations();
+
+  const picks = [
+    {
+      iso: "ISL",
+      title: "Iceland has the safest water",
+      dx: -180,
+      dy: 200,
+      color: "#0ea5e9"  // blue tone for water
+    },
+    {
+      iso: "TCD",
+      title: "Chad — limited access",
+      dx: 30,   // offset of the callout box
+      dy: 200,
+      color: "#0ea5e9"
+    }
+  ];
+
+  for (const t of picks) {
+    const feature = GEO.features.find(f => getISO3(f) === t.iso);
+    if (!feature) continue;
+
+    const [cx, cy] = path.centroid(feature);
+    const [yWater, valWater] = getNearestYearValue("WATER", t.iso, CURRENT_YEAR, 2, true);
+    const valueText = valWater == null ? "—" : fmtPct(valWater);
+
+    renderCallout(
+      [cx, cy],
+      [
+        t.title,
+        `Safe water access: ${valueText}`,
+        `Year: ${yWater ?? CURRENT_YEAR}`
+      ],
+      { dx: t.dx, dy: t.dy, color: t.color }
+    );
+  }
+}
+
 
 function refreshAnnotations() {
   clearAnnotations();
@@ -1016,7 +1103,14 @@ function refreshAnnotations() {
   if (CURRENT_SCENE === "internet") {
     showAnnotation_SDG9();
   }
+  if (CURRENT_SCENE === "sdg8") {
+    showAnnotation_SDG8();
+  }
+  if (CURRENT_SCENE === "water") {
+    showAnnotation_SDG6();
+  }
 }
+
 
 
 // ========= Scenes =========
