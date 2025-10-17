@@ -360,58 +360,157 @@ async function drawElectricityLollipop(containerSelector, features, y0, y1) {
   }
 }
 
-async function drawInternetRegionBoxplots(containerSelector, features, y0, y1) {
-  const rows = [];
-  for (const f of features) {
-    const iso = getISO3(f),
-      region = getRegion(f);
-    const v0 = val("NET", iso, y0),
-      v1 = val("NET", iso, y1);
-    if (v0 != null) rows.push({ region, year: "2015", value: +v0 });
-    if (v1 != null) rows.push({ region, year: "Latest", value: +v1 });
-  }
-  const regions = [...new Set(rows.map((d) => d.region))].sort();
-  const spec = {
-    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    width: 220,
-    height: 200,
-    data: { values: rows },
-    transform: [{ filter: "isFinite(datum.value)" }],
-    facet: { column: { field: "region", type: "nominal", sort: regions } },
-    spec: {
-      mark: { type: "boxplot", extent: "min-max", median: { color: "#0f172a" } },
-      encoding: {
-        x: {
-          field: "year",
-          type: "nominal",
-          sort: ["2015", "Latest"],
-          axis: { title: null }
-        },
-        y: {
-          field: "value",
-          type: "quantitative",
-          title: "% users",
-          scale: { domain: [0, 100] }
-        },
-        color: {
-          field: "year",
-          type: "nominal",
-          scale: { range: ["#64748b", "#0ea5e9"] },
-          legend: { orient: "bottom" }
-        }
-      }
-    },
-    resolve: { scale: { y: "shared" } }
+// SDG 9 – Internet users: horizontal boxplots, one region per row
+// Adds a "Comparison Year" slider below the legend to compare 2015 vs any later year.
+async function drawInternetRegionBoxplots(containerSelector, features, y0, y1Default) {
+  // Friendly region name mapping
+  const aliasMap = {
+    "Sub-Saharan Africa": "Africa",
+    "Europe & Central Asia": "Europe",
+    "Middle East & North Africa": "Middle East",
+    "Latin America & Caribbean": "S. America",
+    "East Asia & Pacific": "E. Asia",
+    "South Asia": "S. Asia",
+    "North America": "N. America"
   };
+
   const el = document.querySelector(containerSelector);
   if (!el) return;
-  el.innerHTML = "";
-  try {
-    await vegaEmbed(containerSelector, spec, { actions: false });
-  } catch (e) {
-    console.error("vegaEmbed failed:", e);
+
+  // Build available years (>= 2015) from the dataset to drive the slider
+  const yearsAvail = (DATA?.NET?.years || [])
+    .filter(y => y >= y0)
+    .sort((a, b) => a - b);
+
+  // Fallback if we can’t find years
+  const compareYearInit = yearsAvail.length ? yearsAvail[yearsAvail.length - 1] : y1Default;
+
+  // Prepare a little host structure: chart DIV + controls DIV (slider under legend)
+  el.innerHTML = `
+    <div class="vl-host"></div>
+    <div class="viz-controls" style="padding:10px 4px 0 4px;">
+      <label style="font-size:12px;color:#334155;margin-right:8px;">Compare to:</label>
+      <input type="range" min="${yearsAvail[0] || compareYearInit}" max="${yearsAvail[yearsAvail.length - 1] || compareYearInit}"
+             value="${compareYearInit}" step="1" class="net-year-range" style="width:260px; vertical-align:middle;">
+      <span class="net-year-label" style="font-size:12px;color:#334155;margin-left:6px;">${compareYearInit}</span>
+    </div>
+  `;
+  const host = el.querySelector(".vl-host");
+  const slider = el.querySelector(".net-year-range");
+  const yearLabel = el.querySelector(".net-year-label");
+
+  // Helper to build long-form rows for 2015 and the selected comparison year
+  function buildRows(compareYear) {
+    const rows = [];
+    for (const f of features) {
+      const iso = getISO3(f);
+      const region = getRegion(f);
+      const alias = aliasMap[region] || region;
+      const vBase = val("NET", iso, y0);
+      const vCmp = val("NET", iso, compareYear);
+      if (vBase != null) rows.push({ region, regionLabel: alias, year: String(y0), value: +vBase });
+      if (vCmp != null) rows.push({ region, regionLabel: alias, year: String(compareYear), value: +vCmp });
+    }
+    return rows;
   }
+
+  async function render(compareYear) {
+    const rows = buildRows(compareYear);
+
+    if (!rows.length) {
+      host.innerHTML = `<div style="padding:8px;color:#334155;font-size:14px;">
+        No internet data available for ${y0} or ${compareYear}.
+      </div>`;
+      return;
+    }
+
+    // ► Explicit facet cell width (faceted charts can’t use width:"container")
+    const containerWidth = Math.max(360, el.clientWidth || 700);
+    const cellWidth = containerWidth - 24;
+
+    const regions = Array.from(new Set(rows.map(d => d.regionLabel))).filter(Boolean).sort();
+    const yearOrder = [String(y0), String(compareYear)];
+
+    const spec = {
+      $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+      padding: { top: 6, left: 8, right: 8, bottom: 20 },
+      data: { values: rows },
+      transform: [{ filter: "isFinite(datum.value)" }],
+      facet: {
+        row: {
+          field: "regionLabel",
+          type: "nominal",
+          sort: regions,
+          header: {
+            // default font; just a bit of space so labels don’t collide with plots
+            labelFontSize: 12,
+            labelPadding: 6,
+            title: null
+          }
+        }
+      },
+      spec: {
+        width: cellWidth,
+        height: 90, // per-region height
+        mark: { type: "boxplot", extent: "min-max", median: { color: "#0f172a" } },
+        encoding: {
+          // Horizontal orientation
+          x: {
+            field: "value",
+            type: "quantitative",
+            title: "% of population using the Internet",
+            scale: { domain: [0, 100] }
+          },
+          y: {
+            field: "year",
+            type: "nominal",
+            sort: yearOrder,
+            axis: { title: null }
+          },
+          color: {
+            field: "year",
+            type: "nominal",
+            sort: yearOrder,
+            scale: { range: ["#64748b", "#0ea5e9"] },
+            legend: {
+              orient: "bottom",
+              direction: "horizontal",
+              title: "Year"
+            }
+          },
+          tooltip: [
+            { field: "regionLabel", title: "Region" },
+            { field: "year", title: "Year" },
+            { field: "value", title: "% users", format: ".1f" }
+          ]
+        }
+      },
+      resolve: { scale: { x: "shared" } },
+      spacing: 14
+    };
+
+    host.innerHTML = "";
+    try {
+      await vegaEmbed(host, spec, { actions: false });
+    } catch (e) {
+      console.error("vegaEmbed failed:", e);
+      host.innerHTML = `<div style="padding:8px;color:#b91c1c;font-size:14px;">
+        Couldn’t render SDG-9 boxplots. Check console for details.
+      </div>`;
+    }
+  }
+
+  // Initial render with the latest available year
+  await render(compareYearInit);
+
+  // Wire up the slider (beneath the legend)
+  slider?.addEventListener("input", async (e) => {
+    const yr = +e.target.value;
+    if (yearLabel) yearLabel.textContent = String(yr);
+    await render(yr);
+  });
 }
+
 
 /**
  * Helper: nearest non-null value to a target year within +/- window.
@@ -861,12 +960,64 @@ function showAnnotation_SDG7() {
   }
 }
 
+// SDG9 annotations — Burundi + United Arab Emirates
+function showAnnotation_SDG9() {
+  if (!GEO) return;
+  clearAnnotations();
+
+  const picks = [
+    // Burundi (ISO3: BDI)
+    {
+      iso: "BDI",
+      title: "Central African countries generally has the least Internet access, such as Burundi",
+      fallbackPct: 11.08,   // used if data missing for CURRENT_YEAR
+      dx: -280,              // pullout box offset from dot (tweak if needed)
+      dy: 200,
+      color: "#3b82f6"       // blue
+    },
+    // United Arab Emirates (ISO3: ARE)
+    {
+      iso: "ARE",
+      title: "United Arab Emirates — near-universal",
+      fallbackPct: 100,
+      dx: -50,
+      dy: 150,
+      color: "#3b82f6"
+    }
+  ];
+
+  for (const t of picks) {
+    const feature = GEO.features.find(f => getISO3(f) === t.iso);
+    if (!feature) continue;
+
+    const [cx, cy] = path.centroid(feature);
+    const v = val("NET", t.iso, CURRENT_YEAR);
+    // if missing, show the supplied figure
+    const valueText = v == null ? `${d3.format(".2f")(t.fallbackPct)}%` : fmtPct(v);
+
+    renderCallout(
+      [cx, cy],
+      [
+        t.title,
+        `Internet users: ${valueText}`,
+        `Year: ${CURRENT_YEAR}`
+      ],
+      { dx: t.dx, dy: t.dy, color: t.color }
+    );
+  }
+}
+
+
 function refreshAnnotations() {
   clearAnnotations();
   if (CURRENT_SCENE === "electricity") {
     showAnnotation_SDG7();
   }
+  if (CURRENT_SCENE === "internet") {
+    showAnnotation_SDG9();
+  }
 }
+
 
 // ========= Scenes =========
 SCENES.intro = () => {
