@@ -77,6 +77,7 @@ let yearsCommon;
 let latestCommonYear;
 const SDG_START = 2015;
 let CURRENT_YEAR = SDG_START;
+let CURRENT_SCENE = null; // track active scene
 
 // ========= Map setup =========
 const mapEl = d3.select("#map");
@@ -90,11 +91,13 @@ const svg = mapEl.append("svg")
 
 const gMain = svg.append("g");
 const gCountries = gMain.append("g");
+// annotations layer
+const gAnno = gMain.append("g").attr("class", "annotations");
 
 const projection = d3.geoNaturalEarth1();
 const path = d3.geoPath(projection);
 
-// Pan/zoom (we'll keep a handle so we can reset after refitting)
+// Pan/zoom
 const zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", (e) => gMain.attr("transform", e.transform));
 svg.call(zoom);
 
@@ -179,7 +182,7 @@ function attachTooltip(metricCode, year) {
     .on("mouseout", () => tooltip.style("opacity", 0));
 }
 
-// ===== Vega-Lite charts (unchanged core specs) =====
+// ===== Vega-Lite charts =====
 async function drawElectricityLollipop(containerSelector, features, y0, y1) {
   const rows = [];
   for (const f of features) {
@@ -220,8 +223,14 @@ async function drawElectricityLollipop(containerSelector, features, y0, y1) {
       }
     ]
   };
-  document.querySelector(containerSelector).innerHTML = "";
-  await vegaEmbed(containerSelector, spec, { actions: false });
+  const el = document.querySelector(containerSelector);
+  if (!el) return;
+  el.innerHTML = "";
+  try {
+    await vegaEmbed(containerSelector, spec, { actions: false });
+  } catch (e) {
+    console.error("vegaEmbed failed:", e);
+  }
 }
 
 async function drawInternetRegionBoxplots(containerSelector, features, y0, y1) {
@@ -248,8 +257,14 @@ async function drawInternetRegionBoxplots(containerSelector, features, y0, y1) {
     },
     resolve: { scale: { y: "shared" } }
   };
-  document.querySelector(containerSelector).innerHTML = "";
-  await vegaEmbed(containerSelector, spec, { actions: false });
+  const el = document.querySelector(containerSelector);
+  if (!el) return;
+  el.innerHTML = "";
+  try {
+    await vegaEmbed(containerSelector, spec, { actions: false });
+  } catch (e) {
+    console.error("vegaEmbed failed:", e);
+  }
 }
 
 async function drawWaterCDF(containerSelector, features, y0, y1) {
@@ -288,8 +303,14 @@ async function drawWaterCDF(containerSelector, features, y0, y1) {
       { data: { values: [{ x: 80 }] }, mark: { type: "rule", strokeDash: [4, 4], opacity: .6 }, encoding: { x: { field: "x", type: "quantitative" } } }
     ]
   };
-  document.querySelector(containerSelector).innerHTML = "";
-  await vegaEmbed(containerSelector, spec, { actions: false });
+  const el = document.querySelector(containerSelector);
+  if (!el) return;
+  el.innerHTML = "";
+  try {
+    await vegaEmbed(containerSelector, spec, { actions: false });
+  } catch (e) {
+    console.error("vegaEmbed failed:", e);
+  }
 }
 
 // SDG 8 scatter
@@ -331,8 +352,14 @@ async function drawSDG8Scatter(containerSelector, features, yearLatest) {
     resolve: { scale: { y: "shared", x: "shared" } }
   };
 
-  document.querySelector(containerSelector).innerHTML = "";
-  await vegaEmbed(containerSelector, spec, { actions: false });
+  const el = document.querySelector(containerSelector);
+  if (!el) return;
+  el.innerHTML = "";
+  try {
+    await vegaEmbed(containerSelector, spec, { actions: false });
+  } catch (e) {
+    console.error("vegaEmbed failed:", e);
+  }
 }
 
 // ========= Year control helpers =========
@@ -343,10 +370,103 @@ function syncYearUI(year) {
   const slider = document.getElementById("year-range");
   if (slider && +slider.value !== year) slider.value = String(year);
 }
-function setYear_Electricity(year) { setMapMetric_Electricity(year); attachTooltip("ELEC", year); syncYearUI(year); }
-function setYear_Internet(year) { setMapMetric_Internet(year); attachTooltip("NET", year); syncYearUI(year); }
-function setYear_Water(year) { setMapMetric_Water(year); attachTooltip("WATER", year); syncYearUI(year); }
-function setYear_GDPpc(year) { setMapMetric_GDPpc(year); attachTooltip("GDPPC", year); syncYearUI(year); }
+function setYear_Electricity(year) { setMapMetric_Electricity(year); attachTooltip("ELEC", year); syncYearUI(year); refreshAnnotations(); }
+function setYear_Internet(year) { setMapMetric_Internet(year); attachTooltip("NET", year); syncYearUI(year); refreshAnnotations(); }
+function setYear_Water(year) { setMapMetric_Water(year); attachTooltip("WATER", year); syncYearUI(year); refreshAnnotations(); }
+function setYear_GDPpc(year) { setMapMetric_GDPpc(year); attachTooltip("GDPPC", year); syncYearUI(year); refreshAnnotations(); }
+
+// ========= Annotations =========
+function clearAnnotations() { gAnno.selectAll("*").remove(); }
+
+function renderCallout([x, y], lines, opts = {}) {
+  const {
+    dx = 44, dy = -24,
+    color = "#f59e0b",
+    textColor = "#0f172a",
+    padding = 8,
+    r = 5,
+    fontSize = 12
+  } = opts;
+
+  gAnno.append("circle")
+    .attr("cx", x).attr("cy", y).attr("r", 4)
+    .attr("fill", color).attr("stroke", "#fff").attr("stroke-width", 1.5);
+
+  const lx = x + dx;
+  const ly = y + dy;
+  const labelG = gAnno.append("g").attr("transform", `translate(${lx},${ly})`);
+
+  const text = labelG.append("text")
+    .attr("x", padding).attr("y", padding + fontSize)
+    .attr("font-size", fontSize).attr("fill", textColor);
+
+  lines.forEach((t, i) => {
+    text.append("tspan").attr("x", padding).attr("dy", i === 0 ? 0 : fontSize + 4).text(t).attr("font-weight", i === 0 ? "700" : "400");
+  });
+
+  const bbox = text.node().getBBox();
+  labelG.insert("rect", "text")
+    .attr("x", 0).attr("y", 0)
+    .attr("rx", r).attr("ry", r)
+    .attr("width", bbox.width + padding * 2)
+    .attr("height", bbox.height + padding * 2 - 3)
+    .attr("fill", "#fff")
+    .attr("stroke", color)
+    .attr("stroke-width", 2);
+
+  gAnno.append("line")
+    .attr("x1", x).attr("y1", y)
+    .attr("x2", lx + (bbox.width / 2)).attr("y2", ly)
+    .attr("stroke", color).attr("stroke-width", 2).attr("opacity", 0.9);
+}
+
+// SDG7 annotations — South Sudan + Australia
+function showAnnotation_SDG7() {
+  if (!GEO) return;
+  clearAnnotations();
+
+  // South Sudan (ISO3: SSD)
+  const fSSD = GEO.features.find(f => getISO3(f) === "SSD");
+  if (fSSD) {
+    const [cx, cy] = path.centroid(fSSD);
+    const vSSD = val("ELEC", "SSD", CURRENT_YEAR);
+    const textSSD = vSSD == null ? "5.4%" : fmtPct(vSSD);
+    renderCallout(
+      [cx, cy],
+      [
+        "South Sudan — very low access",
+        `Electricity access: ${textSSD}`,
+        `Year: ${CURRENT_YEAR}`
+      ],
+      { dx: -230, dy: 210, color: "#f59e0b" } // adjust dx/dy to reposition
+    );
+  }
+
+  // Australia (ISO3: AUS)
+  const fAUS = GEO.features.find(f => getISO3(f) === "AUS");
+  if (fAUS) {
+    const [ax, ay] = path.centroid(fAUS);
+    const vAUS = val("ELEC", "AUS", CURRENT_YEAR);
+    const textAUS = vAUS == null ? "100%" : fmtPct(vAUS);
+    renderCallout(
+      [ax, ay],
+      [
+        "Australia — near-universal access",
+        `Electricity access: ${textAUS}`,
+        `Year: ${CURRENT_YEAR}`
+      ],
+      { dx: -150, dy:  100, color: "#f59e0b" } // adjust dx/dy to reposition
+    );
+  }
+}
+
+
+function refreshAnnotations() {
+  clearAnnotations();
+  if (CURRENT_SCENE === "electricity") {
+    showAnnotation_SDG7();
+  }
+}
 
 // ========= Scenes =========
 SCENES.intro = () => {
@@ -378,9 +498,11 @@ SCENES.intro = () => {
     tile.select('[data-yearnote]').text(`2015 → ${y1}`);
   }
   d3.select("#legend").html('<div class="legend-row"><span class="legend-label">Scroll to begin →</span></div>');
+  refreshAnnotations();
 };
 
 SCENES.electricity = () => {
+  CURRENT_SCENE = "electricity"; // ensure scene is set even if IO timing is quirky
   const y0 = SDG_START, y1 = Math.max(...DATA.ELEC.years.filter(y => y >= y0));
   const slider = document.getElementById("year-range"), label = document.getElementById("year-label"), ctl = document.getElementById("year-control");
   slider.min = String(y0); slider.max = String(y1); slider.value = String(y1); label.textContent = String(y1); ctl.hidden = false;
@@ -391,7 +513,11 @@ SCENES.electricity = () => {
     if (e.key === "ArrowLeft") { e.preventDefault(); setYear_Electricity(Math.max(+slider.min, CURRENT_YEAR - 1)); }
     if (e.key === "ArrowRight") { e.preventDefault(); setYear_Electricity(Math.min(+slider.max, CURRENT_YEAR + 1)); }
   });
-  drawElectricityLollipop("#slope", GEO.features, y0, y1);
+
+  // (Re)draw viz after setting up the year
+  drawElectricityLollipop("#slope", GEO.features, y0, y1).then(() => {
+    refreshAnnotations();
+  });
   d3.select("#slope-title").text(`Top 10 countries by absolute gain in electricity access since 2015 (to ${y1})`);
 };
 
@@ -457,34 +583,31 @@ function setActiveStep(el) {
   el?.classList.add("active");
 }
 
-// ========= Layout & resize handling (RECENTER + SLIGHT ZOOM OUT) =========
+// ========= Layout & resize handling =========
 function layoutAndFit() {
   const node = mapEl.node();
   if (!node || !GEO) return;
 
   const rect = node.getBoundingClientRect();
   const width = Math.max(320, Math.floor(rect.width));
-  const height = Math.max(380, Math.round(width * 0.58)); // slightly taller aspect than before
+  const height = Math.max(380, Math.round(width * 0.58));
 
-  // Drive the SVG's internal coordinate system
   svg.attr("viewBox", `0 0 ${width} ${height}`);
 
-  // Fit with symmetric padding, then zoom out a touch
-  const PAD = 20;         // inner padding so coasts don't touch edges
-  const ZOOM_OUT = 1.10;  // start slightly zoomed out
+  const PAD = 28;
+  const ZOOM_OUT = 0.92;
 
   projection.fitExtent([[PAD, PAD], [width - PAD, height - PAD]], GEO);
   projection.scale(projection.scale() * ZOOM_OUT);
 
-  // Clear any panning/zoom transform that might offset the map
   svg.call(zoom.transform, d3.zoomIdentity);
   gMain.attr("transform", null);
 
-  // Redraw the country paths with the updated projection
   gCountries.selectAll("path.country").attr("d", path);
+
+  refreshAnnotations();
 }
 
-// Simple debounce for resize
 function debounce(fn, ms = 150) {
   let t = null;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), ms); };
@@ -498,7 +621,6 @@ function debounce(fn, ms = 150) {
       ? GEOraw
       : { type: "FeatureCollection", features: GEOraw.features || [] };
 
-    // Draw initial paths (stroke, class) — actual geometry 'd' set in layoutAndFit()
     gCountries.selectAll("path.country")
       .data(GEO.features, d => getISO3(d))
       .join("path")
@@ -507,14 +629,11 @@ function debounce(fn, ms = 150) {
       .attr("stroke-width", 0.5)
       .attr("fill", "#f1f5f9");
 
-    // Initial layout/fitting + resize handling
     layoutAndFit();
     window.addEventListener("resize", debounce(layoutAndFit, 150));
 
-    // Enable pan/zoom
     svg.call(zoom);
 
-    // Load datasets
     const [ELEC, NET, WATER, POP, GDPPC] = await Promise.all([
       loadWB(FILES.ELEC), loadWB(FILES.NET), loadWB(FILES.WATER), loadWB(FILES.POP), loadWB(FILES.GDPPC)
     ]);
@@ -525,22 +644,21 @@ function debounce(fn, ms = 150) {
     }, null)].filter(y => y >= SDG_START).sort((a, b) => a - b);
     latestCommonYear = yearsCommon.at(-1);
 
-    // Initial scene
     SCENES.intro();
-    setThemeForScene("water"); // set a sensible default theme until first step hits
+    setThemeForScene("water");
 
-    // Intersection Observer to trigger scenes + theme + active border
     const steps = document.querySelectorAll(".step");
     const io = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const scene = entry.target.dataset.scene;
+          CURRENT_SCENE = scene;
           setActiveStep(entry.target);
           if (SCENES[scene]) SCENES[scene]();
-          // Update theme only for SDG scenes
           if (scene === "water" || scene === "electricity" || scene === "sdg8" || scene === "internet") {
             setThemeForScene(scene);
           }
+          refreshAnnotations();
         }
       });
     }, { root: null, threshold: 0.6, rootMargin: "-10% 0% -10% 0%" });
