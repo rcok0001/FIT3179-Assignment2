@@ -123,6 +123,16 @@ main.scrolly {
   color: #475569;
 }
 
+#map-header-image {
+  width: 40%;          /* 👈 scales the image down relative to its container */
+  height: auto;         /* keeps correct aspect ratio */
+  margin: 0 auto;       /* centers horizontally */
+  display: block;
+  pointer-events: none; /* ensures map interactions still work */
+  user-select: none;
+}
+
+
 #map { width: 100%; height: 100%; }
 
 #legend {
@@ -296,3 +306,26 @@ main.scrolly {
   font-size: 16px; cursor: pointer; color: #92400e; line-height: 1;
 }
 .sdg-banner[hidden] { display: none !important; }
+
+/* Image in the Global Access Map header */
+.map-figure {
+  margin: 10px 0 0;           /* small gap under the paragraph */
+}
+
+.map-figure img {
+  display: block;
+  width: 100%;
+  max-width: 600px; /* 👈 controls the actual size */
+  height: auto;
+  margin: 0 auto;   /* centers the image */
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  pointer-events: none;
+  user-select: none;
+}
+
+.map-figure figcaption {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 6px;
+}

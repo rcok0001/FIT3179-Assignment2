@@ -135,6 +135,33 @@ const colorGDP = d3
   .domain([500, 60000]); // log scale for GDPpc
 const noDataColor = "#e0e0e0";
 
+// Header images per scene
+const HEADER_IMAGES = {
+  intro:      { src: "./images/Sustainable_Development_Goals.png", alt: "Sustainable Development Goals" }, // “The 2015 Promise”
+  water:      { src: "./images/SDG6.png", alt: "SDG 6: Clean Water and Sanitation" },
+  electricity:{ src: "./images/SDG7.png", alt: "SDG 7: Affordable and Clean Energy" },
+  sdg8:       { src: "./images/SDG8.png", alt: "SDG 8: Decent Work and Economic Growth" },
+  internet:   { src: "./images/SDG9.png", alt: "SDG 9: Industry, Innovation and Infrastructure" }
+};
+
+function preloadHeaderImages() {
+  Object.values(HEADER_IMAGES).forEach(({ src }) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+  });
+}
+
+function updateHeaderImage(scene) {
+  const cfg = HEADER_IMAGES[scene] || HEADER_IMAGES.intro;
+  const img = document.getElementById("map-header-image");
+  if (!img || !cfg) return;
+  // Only swap if different (prevents flicker)
+  if (img.getAttribute("src") !== cfg.src) img.setAttribute("src", cfg.src);
+  if (img.getAttribute("alt") !== cfg.alt) img.setAttribute("alt", cfg.alt);
+}
+
+
 // Legend (accepts a color fn)
 function renderLegendContinuous(domain = [0, 100], label = "%", colorFn = color) {
   const root = d3.select("#legend");
@@ -1432,6 +1459,9 @@ function debounce(fn, ms = 150) {
     SCENES.intro();
     setThemeForScene("water");
 
+    preloadHeaderImages();
+    updateHeaderImage("intro");   // ← add this
+
     const steps = document.querySelectorAll(".step");
     const io = new IntersectionObserver(
       (entries) => {
@@ -1449,6 +1479,7 @@ function debounce(fn, ms = 150) {
             ) {
               setThemeForScene(scene);
             }
+            updateHeaderImage(scene);
             refreshAnnotations();
           }
         });
