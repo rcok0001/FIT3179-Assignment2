@@ -937,14 +937,21 @@ function renderCallout([x, y], lines, opts = {}) {
     .attr("stroke-width", 2);
 
   gAnno
+  let pointerTargetY = ly; // default: connect to top edge
+  if (opts.pointerFrom === "bottom") {
+    pointerTargetY = ly + bbox.height + padding * 2 - 3; // bottom edge of the label box
+  }
+
+  gAnno
     .append("line")
     .attr("x1", x)
     .attr("y1", y)
     .attr("x2", lx + bbox.width / 2)
-    .attr("y2", ly)
+    .attr("y2", pointerTargetY)
     .attr("stroke", color)
     .attr("stroke-width", 2)
     .attr("opacity", 0.9);
+
 }
 
 // SDG7 annotations — South Sudan + Australia
@@ -965,7 +972,7 @@ function showAnnotation_SDG7() {
         `Electricity access: ${textSSD}`,
         `Year: ${CURRENT_YEAR}`
       ],
-      { dx: -230, dy: 210, color: "#f59e0b" }
+      { dx: -230, dy: 110, color: "#f59e0b" }
     );
   }
 
@@ -982,7 +989,7 @@ function showAnnotation_SDG7() {
         `Electricity access: ${textAUS}`,
         `Year: ${CURRENT_YEAR}`
       ],
-      { dx: -150, dy: 100, color: "#f59e0b" }
+      { dx: -150, dy: 50, color: "#f59e0b" }
     );
   }
 }
@@ -999,7 +1006,7 @@ function showAnnotation_SDG9() {
       title: "Central African countries generally has the least Internet access, such as Burundi",
       fallbackPct: 11.08,   // used if data missing for CURRENT_YEAR
       dx: -280,              // pullout box offset from dot (tweak if needed)
-      dy: 200,
+      dy: 120,
       color: "#3b82f6"       // blue
     },
     // United Arab Emirates (ISO3: ARE)
@@ -1008,7 +1015,7 @@ function showAnnotation_SDG9() {
       title: "United Arab Emirates — near-universal",
       fallbackPct: 100,
       dx: -50,
-      dy: 150,
+      dy: 95,
       color: "#3b82f6"
     }
   ];
@@ -1046,13 +1053,13 @@ function showAnnotation_SDG8() {
       iso: "AFG",
       title: "Afghanistan has the lowest GPD pc outside of Africa",
       dx: -140,  // adjust as needed for your layout
-      dy: 250,
+      dy: 150,
       color: "#10b981" // green
     },
     {
       iso: "MCO",
       title: "Monaco — very high income",
-      dx: -140,
+      dx: -260,
       dy: 170,
       color: "#10b981"
     }
@@ -1088,10 +1095,10 @@ function showAnnotation_SDG6() {
     {
       iso: "ISL",
       title: "Iceland has the safest water",
-      dx: 0,
-      dy: -100,
+      dx: -200,
+      dy: 200,
       color: "#0ea5e9"  // blue tone for water 
-      //pointerFrom: 
+
     },
     {
       iso: "TCD",
