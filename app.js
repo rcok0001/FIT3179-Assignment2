@@ -9,6 +9,23 @@ const FILES = {
   GDPPC: "data/8_NY.GDP.PCAP.CD.csv" // GDP per capita (current US$)
 };
 
+// === SDG6: fixed default order (top → bottom)
+const SDG6_DEFAULT_ISO_ORDER = [
+  "ETH", // Ethiopia
+  "UGA", // Uganda
+  "NGA", // Nigeria
+  "IDN", // Indonesia
+  "CIV", // Côte d'Ivoire
+  "GHA", // Ghana
+  "PAK", // Pakistan
+  "MMR", // Myanmar
+  "VNM", // Vietnam
+  "BGD", // Bangladesh
+  "BRA", // Brazil
+  "USA"  // United States of America
+];
+
+
 // ========= SDG banner dismiss (persist across reloads) =========
 (function () {
   const key = "hide_sdg_banner";
@@ -220,6 +237,67 @@ function renderLegendContinuous(domain = [0, 100], label = "%", colorFn = color)
     .attr("font-size", 11)
     .text("No data");
 }
+
+// ==== SDG6 country filter (dropdown with checkboxes) ====
+// Creates a <details> dropdown full of checkboxes.
+// onChange(selectedISOSet) fires whenever the selection changes.
+// countries = [{ iso, name }] (all countries, alphabetical)
+// selectedDefaults = new Set(SDG6_DEFAULT_ISO_ORDER)
+function buildCountryMultiSelect(containerEl, countries, selectedDefaults) {
+  containerEl.innerHTML = `
+    <details class="ctl-details">
+      <summary class="ctl-summary">Filter countries</summary>
+      <div class="ctl-panel"></div>
+      <div class="ctl-actions">
+        <button type="button" class="btn-all">Select all</button>
+        <button type="button" class="btn-clear">Clear</button>
+      </div>
+    </details>
+  `;
+
+  const panel = containerEl.querySelector(".ctl-panel");
+  panel.style.maxHeight = "220px";
+  panel.style.overflow = "auto";
+  panel.style.padding = "6px 4px 8px 4px";
+  panel.style.borderTop = "1px solid #e2e8f0";
+
+  panel.innerHTML = countries.map(d => `
+    <label style="display:flex;gap:8px;align-items:center;margin:4px 2px;">
+      <input type="checkbox" value="${d.iso}" ${selectedDefaults.has(d.iso) ? "checked" : ""}>
+      <span>${d.name}</span>
+    </label>
+  `).join("");
+
+  const inputs = Array.from(panel.querySelectorAll('input[type="checkbox"]'));
+  const sel = new Set([...selectedDefaults]); // live selection
+
+  function emit() {
+    containerEl.dispatchEvent(new CustomEvent("changeCountries", { detail: sel }));
+  }
+
+  inputs.forEach(inp => {
+    inp.addEventListener("change", () => {
+      if (inp.checked) sel.add(inp.value);
+      else sel.delete(inp.value);
+      emit();
+    });
+  });
+
+  containerEl.querySelector(".btn-all")?.addEventListener("click", () => {
+    inputs.forEach(i => (i.checked = true));
+    sel.clear(); countries.forEach(d => sel.add(d.iso));
+    emit();
+  });
+  containerEl.querySelector(".btn-clear")?.addEventListener("click", () => {
+    inputs.forEach(i => (i.checked = false));
+    sel.clear(); emit();
+  });
+
+  // minimal styling retained...
+  return sel;
+}
+
+
 
 // Map painters
 function setMapMetric_Electricity(year) {
@@ -562,155 +640,193 @@ function getNearestYearValue(ind, iso, target, window = 3, preferFuture = true) 
  * Also shows pp-change with a slope/dumbbell.
  */
 async function drawWaterTopImprovers(containerSelector, features, baseYear = SDG_START) {
-  const rows = [];
+  // 1) Build rows for ALL countries (not just top 12)
+  const allRows = [];
   for (const f of features) {
     const iso = getISO3(f);
     const name = getName(f);
 
-    // Baseline: nearest to 2015 within +/-3 years (prefer future)
     const [y0, v0] = getNearestYearValue("WATER", iso, baseYear, 3, true);
-
-    // Latest: latest year >= 2015 with data
     const ys = DATA.WATER.years.filter((y) => y >= baseYear).sort((a, b) => a - b);
-    let y1 = null,
-      v1 = null;
+    let y1 = null, v1 = null;
     for (let i = ys.length - 1; i >= 0; i--) {
       const candidate = ys[i];
       const vv = val("WATER", iso, candidate);
-      if (vv != null) {
-        y1 = candidate;
-        v1 = vv;
-        break;
-      }
+      if (vv != null) { y1 = candidate; v1 = vv; break; }
     }
     if (y0 == null || v0 == null || y1 == null || v1 == null) continue;
     if (y1 <= y0) continue;
 
-    // Population at latest (fallback to nearest year if needed)
     const p1 = pop(iso, y1) ?? pop(iso, y1 - 1) ?? pop(iso, y1 + 1);
     if (p1 == null) continue;
 
-    const dv_pp = v1 - v0; // percentage points
-    const dv_people = (dv_pp / 100) * p1; // absolute people who gained access
-    rows.push({
-      iso,
-      country: name,
-      y0,
-      v0: +v0,
-      y1,
-      v1: +v1,
-      dv_pp,
-      dv_people
+    const dv_pp = v1 - v0;
+    const dv_people = (dv_pp / 100) * p1;
+
+    allRows.push({ iso, country: name, y0, v0: +v0, y1, v1: +v1, dv_pp, dv_people });
+  }
+  // === Alias United States of America → USA ===
+  allRows.forEach(d => {
+    if (d.country === "United States of America") d.country = "USA";
+  });
+
+
+  // 2) Build dropdown over ALL countries (alphabetical), but preselect only your 12
+  const ctlHost = document.querySelector("#water-controls");
+  let selected = new Set(SDG6_DEFAULT_ISO_ORDER);
+
+  if (ctlHost) {
+    const countryList = allRows
+      .map(d => ({ iso: d.iso, name: d.country }))
+      .sort((a, b) => d3.ascending(a.name, b.name));
+
+    buildCountryMultiSelect(ctlHost, countryList, selected);
+
+    ctlHost.addEventListener("changeCountries", async (e) => {
+      selected = e.detail;
+      await render();
+      refreshAnnotations();
     });
   }
 
-  // Focus on top 12 by people gained (most impactful)
-  const top = rows
-    .filter((d) => Number.isFinite(d.dv_people) && Number.isFinite(d.dv_pp))
-    .sort((a, b) => d3.descending(a.dv_people, b.dv_people))
-    .slice(0, 12)
-    .sort((a, b) => d3.ascending(a.v1, b.v1)); // order for nicer slope layout
+  // 3) Renderer: use your fixed order for the 12 defaults, append any extra selected countries afterwards
+  const render = async () => {
+    // rows for currently selected ISO3s
+    const selectedRows = allRows.filter(d => selected.has(d.iso));
 
-  // Long form for Vega-Lite slope/dumbbell
-  const long = top.flatMap((d) => [
-    {
-      country: d.country,
-      type: "Baseline",
-      year: d.y0,
-      value: d.v0,
-      dv_pp: d.dv_pp,
-      dv_people: d.dv_people
-    },
-    {
-      country: d.country,
-      type: "Latest",
-      year: d.y1,
-      value: d.v1,
-      dv_pp: d.dv_pp,
-      dv_people: d.dv_people
+    // ensure the chart order = your fixed list first (filtered to those present and selected),
+    // then any other selected countries, alphabetically by country name
+    const defaultFirst = SDG6_DEFAULT_ISO_ORDER
+      .filter(iso => selected.has(iso))
+      .map(iso => selectedRows.find(d => d.iso === iso))
+      .filter(Boolean);
+
+    const otherSelected = selectedRows
+      .filter(d => !SDG6_DEFAULT_ISO_ORDER.includes(d.iso))
+      .sort((a, b) => d3.ascending(a.country, b.country));
+
+    const shown = [...defaultFirst, ...otherSelected];
+
+    // If user clears everything, fall back to your default 12
+    if (!shown.length) {
+      selected = new Set(SDG6_DEFAULT_ISO_ORDER);
+      return render();
     }
-  ]);
 
-  const spec = {
-    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    width: "container",
-    height: 440,
-    data: { values: long },
-    encoding: {
-      y: {
-        field: "country",
-        type: "nominal",
-        sort: top.map((d) => d.country),
-        axis: { title: null }
-      }
-    },
-    layer: [
-      {
-        mark: { type: "rule", strokeWidth: 2, opacity: 0.6 },
-        encoding: {
-          x: {
-            aggregate: "min",
-            field: "value",
-            type: "quantitative",
-            title: "% safely managed",
-            scale: { domain: [0, 100] }
-          },
-          x2: { aggregate: "max", field: "value" }
-        }
-      },
-      {
-        transform: [{ filter: "datum.type === 'Baseline'" }],
-        mark: { type: "point", filled: true, size: 55, color: "#64748b" },
-        encoding: {
-          x: { field: "value", type: "quantitative" },
-          tooltip: [
-            { field: "country" },
-            { field: "year", title: "Baseline year" },
-            { field: "value", title: "Baseline %", format: ".1f" }
-          ]
-        }
-      },
-      {
-        transform: [{ filter: "datum.type === 'Latest'" }],
-        mark: { type: "point", filled: true, size: 70, color: "#0ea5e9" },
-        encoding: {
-          x: { field: "value", type: "quantitative" },
-          tooltip: [
-            { field: "country" },
-            { field: "year", title: "Latest year" },
-            { field: "value", title: "Latest %", format: ".1f" },
-            { field: "dv_pp", title: "Δ (pp)", format: ".1f" },
-            { field: "dv_people", title: "People gained", format: ",.0f" }
-          ]
-        }
-      },
-      {
-        transform: [{ filter: "datum.type === 'Latest'" }],
-        mark: {
-          type: "text",
-          dx: 6,
-          align: "left",
-          baseline: "middle",
-          fontSize: 11,
-          color: "#0f172a"
+    // Long form for Vega-Lite slope/dumbbell
+    const long = shown.flatMap(d => ([
+      { country: d.country, type: "Baseline", year: d.y0, value: d.v0, dv_pp: d.dv_pp, dv_people: d.dv_people },
+      { country: d.country, type: "Latest",   year: d.y1, value: d.v1, dv_pp: d.dv_pp, dv_people: d.dv_people }
+    ]));
+
+    // 4) Vega-Lite spec:
+    //    - single shared x scale defined at top-level with axis on bottom ONLY
+    //    - layers reference x without adding their own axes (prevents a second/top axis)
+    const spec = {
+      $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+      width: "container",
+      height: Math.max(360, 28 * Math.max(3, shown.length) + 80),
+      data: { values: long },
+
+      // shared encodings
+      encoding: {
+        x: {
+          field: "value",
+          type: "quantitative",
+          scale: { domain: [0, 100] },
+          axis: { title: "% safely managed", orient: "bottom" } // ← bottom only
         },
-        encoding: {
-          x: { field: "value", type: "quantitative" },
-          text: { field: "dv_people", type: "quantitative", format: ",.2s" }
+        y: {
+          field: "country",
+          type: "nominal",
+          sort: shown.map(d => d.country),
+          axis: { title: null, grid: true, gridColor: "#e5e7eb", tickColor: "#e5e7eb"}
         }
-      }
-    ]
+      },
+
+      layer: [
+        {
+          // line between baseline and latest (using rule over min/max by country)
+          transform: [{ aggregate: [{ op: "min", field: "value", as: "x0" }, { op: "max", field: "value", as: "x1" }], groupby: ["country"] }],
+          mark: { type: "rule", strokeWidth: 2, opacity: 0.6 },
+          encoding: { x: { field: "x0", type: "quantitative", axis: null }, x2: { field: "x1" } }
+        },
+        {
+          transform: [{ filter: "datum.type === 'Baseline'" }],
+          mark: { type: "point", filled: true, size: 55, color: "#64748b" },
+          encoding: {
+            // x inherited; do not add axis here
+            tooltip: [
+              { field: "country" },
+              { field: "year", title: "Baseline year" },
+              { field: "value", title: "Baseline %", format: ".1f" }
+            ]
+          }
+        },
+        {
+          transform: [{ filter: "datum.type === 'Latest'" }],
+          mark: { type: "point", filled: true, size: 70, color: "#0ea5e9" },
+          encoding: {
+            tooltip: [
+              { field: "country" },
+              { field: "year", title: "Latest year" },
+              { field: "value", title: "Latest %", format: ".1f" },
+              { field: "dv_pp", title: "Δ (pp)", format: ".1f" },
+              { field: "dv_people", title: "People gained", format: ",.0f" }
+            ]
+          }
+        },
+        {
+          transform: [
+            { filter: "datum.type === 'Baseline'" },
+            { calculate: "format(datum.value, '.1f') + '%'", as: "value_label" }
+          ],
+          mark: {
+            type: "text",
+            dx: -6,
+            align: "right",
+            baseline: "middle",
+            fontSize: 11,
+            color: "#0f172a"
+          },
+          encoding: {
+            x: { field: "value", type: "quantitative" },
+            text: { field: "value_label" }
+          }
+        },
+        {
+          transform: [
+            { filter: "datum.type === 'Latest'" },
+            { calculate: "format(datum.value, '.1f') + '%'", as: "value_label" }
+          ],
+          mark: {
+            type: "text",
+            dx: 6,
+            align: "left",
+            baseline: "middle",
+            fontSize: 11,
+            color: "#0f172a"
+          },
+          encoding: {
+            x: { field: "value", type: "quantitative" },
+            text: { field: "value_label" }
+          }
+        }
+      ]
+    };
+
+    const el = document.querySelector(containerSelector);
+    if (!el) return;
+    el.innerHTML = "";
+    try { await vegaEmbed(containerSelector, spec, { actions: false }); }
+    catch (e) { console.error("vegaEmbed failed:", e); }
   };
 
-  const el = document.querySelector(containerSelector);
-  if (!el) return;
-  el.innerHTML = "";
-  try {
-    await vegaEmbed(containerSelector, spec, { actions: false });
-  } catch (e) {
-    console.error("vegaEmbed failed:", e);
-  }
+  // Initial render with your defaults
+  await render();
 }
+
+
 
 // SDG 8 scatter — single plot, nearest-year alignment, legends below
 async function drawSDG8Scatter(containerSelector, features, yearLatest) {
