@@ -131,9 +131,9 @@ const color = d3
   .interpolator(d3.interpolateYlGnBu)
   .domain([0, 100]);
 const colorGDP = d3
-  .scaleSequentialLog(d3.interpolatePuBuGn)
+  .scaleSequentialLog(d3.interpolateYlGnBu)
   .domain([500, 60000]); // log scale for GDPpc
-const noDataColor = "#e0e0e0";
+const noDataColor = "#8a8a8aff";
 
 // Header images per scene
 const HEADER_IMAGES = {
@@ -1088,15 +1088,16 @@ function showAnnotation_SDG6() {
     {
       iso: "ISL",
       title: "Iceland has the safest water",
-      dx: -180,
-      dy: 200,
-      color: "#0ea5e9"  // blue tone for water
+      dx: 0,
+      dy: -100,
+      color: "#0ea5e9"  // blue tone for water 
+      //pointerFrom: 
     },
     {
       iso: "TCD",
       title: "Chad — limited access",
       dx: 30,   // offset of the callout box
-      dy: 200,
+      dy: 100,
       color: "#0ea5e9"
     }
   ];
@@ -1142,58 +1143,71 @@ function refreshAnnotations() {
 
 // ========= Scenes =========
 SCENES.intro = () => {
-  gCountries.selectAll("path.country").attr("fill", "#f1f5f9");
+  gCountries.selectAll("path.country").attr("fill", noDataColor);
   tooltip.style("opacity", 0);
-  const y0 = SDG_START,
-    y1 = latestCommonYear;
+  const y0 = SDG_START, y1 = latestCommonYear;
 
+  // Population-weighted means. Percent metrics divide by 100; GDPpc is raw.
   function weightedMean(code) {
-    let num = 0,
-      den = 0,
-      n0 = 0,
-      d0 = 0;
+    let num0 = 0, den0 = 0, num1 = 0, den1 = 0;
+    const isPct = code === "ELEC" || code === "NET" || code === "WATER";
     for (const f of GEO.features) {
       const iso = getISO3(f);
-      const v = val(code, iso, y1),
-        p = pop(iso, y1);
-      if (v != null && p != null) {
-        num += (v / 100) * p;
-        den += p;
+
+      const v1 = val(code, iso, y1);
+      const p1 = pop(iso, y1);
+      if (v1 != null && p1 != null) {
+        num1 += (isPct ? v1 / 100 : v1) * p1;
+        den1 += p1;
       }
-      const v0 = val(code, iso, y0),
-        p0 = pop(iso, y0) ?? p;
+
+      const v0 = val(code, iso, y0);
+      const p0 = pop(iso, y0) ?? p1;
       if (v0 != null && p0 != null) {
-        n0 += (v0 / 100) * p0;
-        d0 += p0;
+        num0 += (isPct ? v0 / 100 : v0) * p0;
+        den0 += p0;
       }
     }
-    return {
-      mean2015: d0 ? (n0 / d0) * 100 : null,
-      meanLatest: den ? (num / den) * 100 : null
-    };
+    if (!den0 || !den1) return { mean2015: null, meanLatest: null, isPct };
+    const m0 = (num0 / den0) * (isPct ? 100 : 1);
+    const m1 = (num1 / den1) * (isPct ? 100 : 1);
+    return { mean2015: m0, meanLatest: m1, isPct };
   }
 
+  // helper for $ deltas
+  const fmtUSDDelta = (d) =>
+    d == null ? "(—)" : `${d >= 0 ? "+$" : "-$"}${d3.format(",.0f")(Math.abs(d))}`;
+
+  // List all four tiles, including SDG 8 (GDP per capita)
   for (const t of [
-    { id: "#tile-electricity", code: "ELEC" },
-    { id: "#tile-internet", code: "NET" },
-    { id: "#tile-water", code: "WATER" }
+    { id: "#tile-water",       code: "WATER"  }, // %
+    { id: "#tile-electricity", code: "ELEC"   }, // %
+    { id: "#tile-sdg8",        code: "GDPPC"  }, // $ (GDP per capita)
+    { id: "#tile-internet",    code: "NET"    }  // %
   ]) {
-    const { mean2015, meanLatest } = weightedMean(t.code);
-    const delta =
-      mean2015 != null && meanLatest != null ? meanLatest - mean2015 : null;
+    const { mean2015, meanLatest, isPct } = weightedMean(t.code);
+    const delta = (mean2015 != null && meanLatest != null) ? (meanLatest - mean2015) : null;
+
     const tile = d3.select(t.id);
-    tile.select("[data-2015]").text(fmtPct(mean2015));
-    tile.select("[data-latest]").text(fmtPct(meanLatest));
-    tile.select("[data-delta]").text(delta == null ? "(—)" : `(${fmtPP(delta)})`);
+    if (isPct) {
+      tile.select("[data-2015]").text(fmtPct(mean2015));
+      tile.select("[data-latest]").text(fmtPct(meanLatest));
+      tile.select("[data-delta]").text(delta == null ? "(—)" : `(${fmtPP(delta)})`);
+    } else {
+      // SDG 8 (GDP per capita)
+      tile.select("[data-2015]").text(fmtUSD0(mean2015));
+      tile.select("[data-latest]").text(fmtUSD0(meanLatest));
+      tile.select("[data-delta]").text(fmtUSDDelta(delta));
+    }
     tile.select("[data-yearnote]").text(`2015 → ${y1}`);
   }
-  d3
-    .select("#legend")
-    .html(
-      '<div class="legend-row"><span class="legend-label">Scroll to begin →</span></div>'
-    );
+
+  d3.select("#legend").html(
+    '<div class="legend-row"><span class="legend-label">Scroll to begin →</span></div>'
+  );
   refreshAnnotations();
 };
+
 
 SCENES.electricity = () => {
   CURRENT_SCENE = "electricity";
@@ -1384,7 +1398,7 @@ function layoutAndFit() {
   svg.attr("viewBox", `0 0 ${width} ${height}`);
 
   const PAD = 28;
-  const ZOOM_OUT = 0.92;
+  const ZOOM_OUT = 1.05;
 
   projection.fitExtent(
     [
