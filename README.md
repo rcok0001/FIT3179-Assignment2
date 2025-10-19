@@ -6,8 +6,8 @@ https://rcok0001.github.io/FIT3179-Assignment2/index.html
 
 Created using JS (with vega-lite), CSS, and HTML
 
----------
 Sources
+---------
 Data: World Bank World Development Indicators (Water, Electricity, Internet, GDP, Population)
   https://data.worldbank.org/indicator/SH.H2O.SMDW.ZS
   https://data.worldbank.org/indicator/EG.ELC.ACCS.ZS
