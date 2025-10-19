@@ -1584,7 +1584,7 @@ SCENES.internet = async () => {
   await drawInternetRegionBoxplots("#net-boxplots", GEO.features, y0, y1);
   d3
     .select("#net-title")
-    .text(`Placeholder`);
+    .text(` `);
 };
 
 SCENES.water = async () => {
