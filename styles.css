@@ -36,7 +36,10 @@ body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   margin: 0;
   color: #0f172a;
-  background: #e6f0ff;
+  /*background: #F5F5F5*/
+  background: linear-gradient(180deg, #ffffff 0%, #317f9e 100%);
+  
+
 }
 
 /* Apply active theme variables based on body class */
@@ -48,7 +51,8 @@ body.theme-9 { --accent: var(--accent-9); --map-border: var(--map9-border); --ma
 header#hero {
   padding: 28px var(--gutter) 8px;
   border-bottom: 1px solid #e2e8f0;
-  background: #fff;
+  background: #009DDA;
+  color: white;
   position: sticky;
   top: 0;
   z-index: 5;
@@ -61,7 +65,7 @@ header#hero h1 {
   font-size: clamp(22px, 2.8vw, 32px);
 }
 
-header#hero p { margin: 0; color: #475569; }
+header#hero p { margin: 0; }
 
 /* MAIN GRID */
 main.scrolly {
@@ -89,7 +93,6 @@ main.scrolly {
   height: calc(100vh - 68px);
   display: grid;
   grid-template-rows: 1fr auto auto;
-  background: #fff;
   overflow: hidden;
 }
 
@@ -310,8 +313,8 @@ main.scrolly {
 .sdg-band {
   margin: 0 var(--gutter);
   padding: 16px;
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
+  background: #009DDA;
+  border: 1px solid #e2e8f0;      /* light neutral border */
   border-radius: 14px;
   box-shadow: var(--shadow);
   display: grid;
@@ -335,7 +338,7 @@ main.scrolly {
 /* SDG banner */
 .sdg-banner {
   margin: 12px var(--gutter) 0;
-  background: #fff7ed;
+  background:#009DDA;
   border: 1px solid #fed7aa;
   border-radius: 10px;
   box-shadow: var(--shadow);
@@ -354,6 +357,46 @@ main.scrolly {
   font-size: 16px; cursor: pointer; color: #92400e; line-height: 1;
 }
 .sdg-banner[hidden] { display: none !important; }
+
+/* ===== Footer (matches white header style) ===== */
+#footer {
+  background: #009DDA;
+  border-top: 1px solid #e2e8f0; /* same border tone as header bottom */
+  padding: 28px var(--gutter);
+  max-width: var(--maxw);
+  margin: 40px auto 0;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.04);
+  color: white;
+}
+
+#footer .footer-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+}
+
+#footer h4 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+#footer ul {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+#footer li {
+  margin-bottom: 4px;
+}
+
+#footer .credits {
+  font-size: 13px;
+  margin: 0;
+  color: white;
+}
+
 
 /* Image in the Global Access Map header */
 .map-figure {
@@ -377,3 +420,4 @@ main.scrolly {
   color: #64748b;
   margin-top: 6px;
 }
+
