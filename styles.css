@@ -37,7 +37,7 @@ body {
   margin: 0;
   color: #0f172a;
   /*background: #F5F5F5*/
-  background: linear-gradient(180deg, #ffffff 0%, #317f9e 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #596f77 100%);
   
 
 }
@@ -50,7 +50,6 @@ body.theme-9 { --accent: var(--accent-9); --map-border: var(--map9-border); --ma
 
 header#hero {
   padding: 28px var(--gutter) 8px;
-  border-bottom: 1px solid #e2e8f0;
   background: #009DDA;
   color: white;
   position: sticky;
@@ -88,13 +87,15 @@ main.scrolly {
 /* Sticky map panel */
 #sticky-map {
   position: sticky;
-  top: 68px;
+  top: 160px;
   align-self: start;
   height: calc(100vh - 68px);
   display: grid;
   grid-template-rows: 1fr auto auto;
   overflow: hidden;
 }
+
+
 
 /* Map container uses theme vars */
 #map-container {
@@ -104,9 +105,10 @@ main.scrolly {
   border: 2px solid var(--map-border);
   border-radius: 12px;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--map-bg-start) 0%, var(--map-bg-end) 100%);
+  background: white;
   box-shadow: var(--shadow);
   margin-bottom: 0;
+  
 }
 
 #map-header {
@@ -177,6 +179,23 @@ main.scrolly {
 }
 
 
+#tile-sdg8 h3 {
+  color: white;
+  font-style:normal;
+}
+#tile-water h3 {
+  color: white;
+  font-style:normal;
+}
+#tile-electricity h3 {
+  color: white;
+  font-style:normal;
+}
+#tile-internet h3 {
+  color: white;
+  font-style:normal;
+}
+
 /* SDG 9 – Industry, Innovation, and Infrastructure */
 #tile-internet {
   background-color: #F36D25; /* SDG 9 orange */
@@ -184,7 +203,14 @@ main.scrolly {
 
 
 
-#map { width: 100%; height: 100%; transform: translateY(-80px);}
+#map { width: 100%; height: 70%; transform: translateY(-70px);}
+
+#legend-container {
+  padding: 8px 12px;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+
+}
 
 #legend {
   padding: 8px 12px;
@@ -192,17 +218,28 @@ main.scrolly {
   background: #fff;
 }
 
+#legend-container h4 {
+  color: black;
+  margin-bottom: 6px;
+}
+
+
+
 #year-control {
-  padding: 10px 12px;
+  padding: 15px 15px;
   border-top: 1px solid #e2e8f0;
   background: #fff;
 }
 #year-control label { font-size: 12px; color: #475569; display: block; margin-bottom: 6px; }
 #year-range { width: 100%; }
 
+#right-space {
+  color: white;
+}
+
 /* RIGHT COLUMN — prevent overflow into the gutter */
 #story {
-  padding: 20px;
+  padding: 0px 20px;
   display: grid;
   gap: 64px;
   width: 100%;
@@ -286,8 +323,8 @@ main.scrolly {
 
 .tile h3 { margin: 0 0 4px; font-size: 14px; color: #334155; font-weight: 600; }
 .big { font-size: 28px; font-weight: 700; }
-.delta { color: #059669; font-weight: 600; margin-left: 6px; }
-.subtle { color: #64748b; font-size: 12px; }
+.delta { color: #3f854e; font-weight: 600; margin-left: 6px; }
+.subtle { color: #ffffff; font-size: 12px; }
 
 /* Tooltip */
 .tooltip {
@@ -322,6 +359,15 @@ main.scrolly {
   max-width: var(--maxw);
   margin-inline: auto;
 }
+
+#map-header-image {
+  width: 30%;          /* adjust between 50%–90% as you like */
+  max-width: 500px;    /* optional cap */
+  height: auto;
+  display: block;
+  margin: 0 auto;      /* center it */
+}
+
 .sdg-band .band-title {
   font-weight: 800;
   color: #5b21b6;
@@ -361,7 +407,7 @@ main.scrolly {
 /* ===== Footer (matches white header style) ===== */
 #footer {
   background: #009DDA;
-  border-top: 1px solid #e2e8f0; /* same border tone as header bottom */
+
   padding: 28px var(--gutter);
   max-width: var(--maxw);
   margin: 40px auto 0;
@@ -421,3 +467,60 @@ main.scrolly {
   margin-top: 6px;
 }
 
+/* Band that matches header/footer width */
+.page-band {
+  max-width: var(--maxw);
+  margin: 24px auto 0;
+  padding: 0 var(--gutter);
+}
+
+#conclusion {
+  border: 2px solid #009EDB;   /* UN blue outline */
+  border-radius: 14px;         /* same as your cards */
+  background: #ffffff;         /* keep white background */
+  scroll-margin-top: 80px;
+}
+
+
+#conclusion ul {
+  margin: 10px 0 14px;
+  padding-left: 18px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+/* Conclusion decorative art */
+#conclusion {
+  position: relative;
+  /* add right padding so text doesn't overlap the art */
+  padding-right: clamp(20px, 22vw, 300px);
+}
+
+#conclusion .conclusion-art {
+  position: absolute;
+  right: 60px;
+  bottom: 16px;
+  width: 200px;
+  height: auto;
+  opacity: 0.9;                 /* subtle */
+  pointer-events: none;          /* purely decorative */
+  user-select: none;
+  border-radius: 10px;           /* matches your .step rounding */
+}
+
+/* Hide on smaller screens to save space */
+@media (max-width: 720px) {
+  #conclusion {
+    padding-right: 20px;
+  }
+  #conclusion .conclusion-art {
+    display: none;
+  }
+}
+
+/* Desktop/two-column only */
+@media (min-width: 981px) {
+  .left-bottom-spacer {
+    height: 20px;      /* tweak up/down until the bottoms align */
+  }
+}

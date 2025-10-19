@@ -237,13 +237,13 @@ function renderLegendContinuous(domain = [0, 100], label = "%", colorFn = color)
     .remove();
   svgL
     .append("text")
-    .attr("x", 10 + w + 8)
+    .attr("x", 10 + w + 8 + 10)
     .attr("y", 20)
     .attr("font-size", 11)
     .text(label);
   svgL
     .append("rect")
-    .attr("x", 10 + w + 8)
+    .attr("x", 10 + w + 8 + 10)
     .attr("y", 24)
     .attr("width", 14)
     .attr("height", 10)
@@ -252,7 +252,7 @@ function renderLegendContinuous(domain = [0, 100], label = "%", colorFn = color)
     .attr("stroke", "#e2e8f0");
   svgL
     .append("text")
-    .attr("x", 10 + w + 26)
+    .attr("x", 10 + w + 26 + 10)
     .attr("y", 33)
     .attr("font-size", 11)
     .text("No data");
@@ -1296,7 +1296,7 @@ function showAnnotation_SDG9() {
       title: "Central African countries generally has the least Internet access, such as Burundi",
       fallbackPct: 11.08,   // used if data missing for CURRENT_YEAR
       dx: -280,              // pullout box offset from dot (tweak if needed)
-      dy: 120,
+      dy: 105,
       color: "#3b82f6"       // blue
     },
     // United Arab Emirates (ISO3: ARE)
@@ -1305,7 +1305,7 @@ function showAnnotation_SDG9() {
       title: "United Arab Emirates — near-universal",
       fallbackPct: 100,
       dx: -50,
-      dy: 95,
+      dy: 80,
       color: "#3b82f6"
     }
   ];

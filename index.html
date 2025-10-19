@@ -36,12 +36,21 @@
         <div id="map"></div>
       </div>
 
+      <div id="legend-container">
+      <h3>       Legend</h3>
 
       <div id="legend"></div>
+
+      </div>
+
       <div id="year-control" hidden>
         <label for="year-range">Year: <span id="year-label">2015</span></label>
         <input id="year-range" type="range" min="2015" max="2015" value="2015" step="1" />
-      </div>
+
+
+      <!-- Left column bottom spacer (purely visual) -->
+    <div class="left-bottom-spacer" aria-hidden="true"></div>
+
     </aside>
 
     <article id="story">
@@ -92,7 +101,6 @@
             <div class="viz-title" id="water-title">
               Safely managed water: share of world population by access bands — 2015 vs Latest
             </div>
-
             <!-- ✅ Must exist -->
             <div id="water-controls" class="viz-controls"></div>
 
@@ -155,6 +163,27 @@
 
   <!-- App -->
   <script type="module" src="./app.js"></script>
+
+<!-- Conclusion band (matches header/footer width) -->
+<div class="page-band">
+  <section id="conclusion" class="step">
+    <h2>Conclusion</h2>
+    <p>
+      While access to essentials like safe water, electricity, and the internet has improved since 2015,
+      progress remains uneven. Accelerating investment and targeting underserved communities are critical
+      to reaching 2030 targets.
+    </p>
+    <ul>
+      <li>Target last-mile delivery</li>
+      <li>Pair infrastructure with upkeep & governance</li>
+      <li>Open data to track outcomes</li>
+    </ul>
+
+      <!-- Decorative image -->
+  <img class="conclusion-art" src="./images/SDG_logo.png" alt="" aria-hidden="true" />
+  </section>
+</div>
+
 
   <!-- Footer / Sources -->
   <footer id="footer">
