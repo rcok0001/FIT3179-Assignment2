@@ -8,8 +8,8 @@
 </head>
 <body>
   <header id="hero">
-    <h1>The UN's Sustainable Development Goals - Are We On Track for 2030?</h1>
-    <p>The Sustainable Development Goals (SDGs) are a set of 17 global objectives established by the United Nations to end poverty, protect the planet, and ensure peace and prosperity for all by 2030.</p>
+    <h1>Infrastructure and Prosperity</h1>
+    <p>Sustainable Development Goals (SDGs) are 17 world objectives the UN has set out to achieve by 2030.</p>
   </header>
 
 
@@ -19,7 +19,7 @@
       <div id="map-container">
         <div id="map-header">
           <h3>Global Access Map</h3>
-          <p>This choropleth updates automatically as you scroll through the SDGs, showing each goal’s latest progress.</p>
+          <p>This map will auto-update as you scroll.</p>
 
           <!-- Add your image here (pick any file from /images) -->
           <figure class="map-figure">
@@ -37,7 +37,7 @@
       </div>
 
       <div id="legend-container">
-      <h3>       Legend</h3>
+      <h4>       Legend</h4>
 
       <div id="legend"></div>
 
@@ -57,49 +57,47 @@
       <!-- Intro -->
       <section class="step" data-scene="intro">
         <h2>The 2015 Promise</h2>
-        <p>Of the 17 goals outlined in 2015, we take a closer look at <strong>goals 6-9</strong> focusing on <strong>basics & infrastructure</strong>.</p>
+        <p>Of the 17 goals outlined in 2015, we take a closer look at <strong>goals 6-9</strong> focusing on <strong>infrastructure</strong>. They are:</p>
         
         <!-- Intro tiles: SDG 6 → 7 → 9 -->
         <div class="tiles" id="intro-tiles">
           <div class="tile" id="tile-water">
-            <h3>Safely managed water (SDG 6)</h3>
+            <h3>SDG 6: Safely managed water</h3>
             <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta" data-delta>(+— pp)</span></div>
             <div class="subtle" data-yearnote>2015 → —</div>
           </div>
           <div class="tile" id="tile-electricity">
-            <h3>Electricity access (SDG 7)</h3>
+            <h3>SDG 7: Electricity access</h3>
             <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta" data-delta>(+— pp)</span></div>
             <div class="subtle" data-yearnote>2015 → —</div>
           </div>
             
           <div class="tile" id="tile-sdg8">
-            <h3>Economic growth (SDG 8)</h3>
+            <h3>SDG 8: Economic growth</h3>
             <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta" data-delta>(+— pp)</span></div>
             <div class="subtle" data-yearnote>2015 → —</div>
           </div>
           <div class="tile" id="tile-internet">
-            <h3>Internet users (SDG 9)</h3>
+            <h3>SDG 9: Internet users</h3>
             <div><span class="big" data-2015>–</span> → <span class="big" data-latest>–</span> <span class="delta" data-delta>(+— pp)</span></div>
             <div class="subtle" data-yearnote>2015 → —</div>
           </div>
         </div>
 
         <!--<p class="subtle credits">Averages use <code>SP.POP.TOTL</code>; latest year is the overlap across metrics.</p>-->
-        <p class="subtle credits">Based on Population-weighted global averages from 2015 to the latest comparable year.</p>
+        <p class="subtle credits">Based on compared population-weighted global averages from 2015</p>
 
       </section>
 
       <!-- Purple grouping for SDGs 6–9 -->
       <section class="sdg-band" aria-label="Grouped SDGs 6 to 9">
         <!--<div class="band-title"><strong>Basics &amp; Infrastructure</strong></div> -->
-
         <!-- SDG 6 -->
         <section class="step" data-scene="water">
-          <h2>Safe to Drink — Water (SDG 6)</h2>
-          <p>...</p>
+          <h2>SDG 6: Safe to Drink Water</h2>
           <div class="viz-wrap">
             <div class="viz-title" id="water-title">
-              Safely managed water: share of world population by access bands — 2015 vs Latest
+              
             </div>
             <!-- ✅ Must exist -->
             <div id="water-controls" class="viz-controls"></div>
@@ -111,11 +109,10 @@
 
         <!-- SDG 7 -->
         <section class="step" data-scene="electricity">
-          <h2>Powering Progress — Electricity (SDG 7)</h2>
-          <p>Use the slider to choose a year; the chart shows top absolute movers (2015 → latest).</p>
+          <h2>SDG 7: Powering Progress</h2>
           <div class="viz-wrap">
             <div class="viz-title" id="slope-title">
-              Top 10 countries by absolute gain in electricity access since 2015 (pp)
+            
             </div>
 
             <!-- ✅ Required hook -->
@@ -129,9 +126,9 @@
 
         <!-- SDG 8 -->
         <section class="step" data-scene="sdg8">
-          <h2>Decent Work & Growth — SDG 8</h2>
-          <p>The map switches to GDP per capita (constant US$, log scale). The chart relates prosperity to foundational
-            access: <strong>GDP per capita (log)</strong> vs <strong>Electricity</strong>, <strong>Internet</strong>, and
+          <h2>SDG 8: Decent Work & Growth</h2>
+          <p>The map switches to GDP per capita (US$). The chart relates prosperity to foundational
+            access: <strong>GDP per capita</strong> vs <strong>Electricity</strong>, <strong>Internet</strong>, and
             <strong>Water</strong> (latest year), sized by population and colored by region.
           </p>
           <div class="viz-wrap">
@@ -142,10 +139,10 @@
 
         <!-- SDG 9 -->
         <section class="step" data-scene="internet">
-          <h2>Going Online — Internet (SDG 9)</h2>
-          <p>Map shows internet users (% of population) for the selected year. Below: regional boxplots (2015 vs latest).</p>
+          <h2>SDG 9: Going Online</h2>
+          <p>Placeholder</p>
           <div class="viz-wrap">
-            <div class="viz-title" id="net-title">Internet users (%): distribution by region — 2015 vs Latest</div>
+            <div class="viz-title" id="net-title">Placeholder</div>
             <div id="net-boxplots"></div>
           </div>
         </section>

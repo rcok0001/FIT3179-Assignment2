@@ -12,9 +12,9 @@
 
   /* Per-SDG accents */
   --accent-6: #38bdf8;  /* light blue (sky-400) */
-  --accent-7: #f59e0b;  /* yellow/amber-500 */
-  --accent-8: #9f1239;  /* burgundy/rose-800 */
-  --accent-9: #fb923c;  /* orange-400 */
+  --accent-7: #38bdf8;  /* yellow/amber-500 */
+  --accent-8: #ffffff;  /* burgundy/rose-800 */
+  --accent-9: #38bdf8;  /* orange-400 */
 
   /* Per-SDG map backgrounds + borders */
   --map6-border: #7dd3fc;
@@ -49,7 +49,8 @@ body.theme-8 { --accent: var(--accent-8); --map-border: var(--map8-border); --ma
 body.theme-9 { --accent: var(--accent-9); --map-border: var(--map9-border); --map-bg-start: var(--map9-start); --map-bg-end: var(--map9-end); }
 
 header#hero {
-  padding: 28px var(--gutter) 8px;
+  padding: 28px var(--gutter) 15px;
+
   background: #009DDA;
   color: white;
   position: sticky;

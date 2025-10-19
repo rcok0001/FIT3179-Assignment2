@@ -1546,7 +1546,7 @@ SCENES.electricity = () => {
   d3
     .select("#slope-title")
     .text(
-      `Top 10 countries by absolute gain in electricity access since 2015 (to ${y1})`
+      `Share of country populations with access to electricity, 2015 cs Latest`
     );
 };
 
@@ -1584,7 +1584,7 @@ SCENES.internet = async () => {
   await drawInternetRegionBoxplots("#net-boxplots", GEO.features, y0, y1);
   d3
     .select("#net-title")
-    .text(`Internet users (%): distribution by region — 2015 vs ${y1}`);
+    .text(`Placeholder`);
 };
 
 SCENES.water = async () => {
@@ -1626,7 +1626,7 @@ SCENES.water = async () => {
   await drawWaterTopImprovers("#water-heat", GEO.features, y0);
   d3
     .select("#water-title")
-    .text(`Safely managed water — Top improvers since ~2015 (labels show people gained)`);
+    .text(`Share of world population by access bands compared to 2015`);
 };
 
 SCENES.sdg8 = async () => {
@@ -1665,7 +1665,7 @@ SCENES.sdg8 = async () => {
   d3
     .select("#sdg8-title")
     .text(
-      `GDP per capita vs access (${latest}) — faceted by metric; circle size = population`
+      `GDP per capita vs access, filter by Internet, Electricity, or water. Circle size = population`
     );
 };
 
