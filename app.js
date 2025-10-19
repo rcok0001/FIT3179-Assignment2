@@ -25,6 +25,26 @@ const SDG6_DEFAULT_ISO_ORDER = [
   "USA"  // United States of America
 ];
 
+// === SDG7: default ISO list (bottom → top order in the chart)
+const SDG7_DEFAULT_ISO_ORDER = [
+  "BGD", // Bangladesh
+  "SLB", // Solomon Islands
+  "ETH", // Ethiopia
+  "BEN", // Benin
+  "ZWE", // Zimbabwe
+  "KHM", // Cambodia
+  "TLS", // Timor-Leste
+  "UGA", // Uganda
+  "KEN", // Kenya
+  "RWA"  // Rwanda
+];
+
+// (Optional) display aliases for nicer labels in the chart only
+const SDG7_COUNTRY_ALIASES = {
+  "Solomon Islands": "Solomon Is."
+};
+
+
 
 // ========= SDG banner dismiss (persist across reloads) =========
 (function () {
@@ -364,106 +384,222 @@ function attachTooltip(metricCode, year) {
 }
 
 // ===== Vega-Lite charts =====
-async function drawElectricityLollipop(containerSelector, features, y0, y1) {
-  const rows = [];
+async function drawElectricityLollipopFiltered(containerSelector, features, y0, y1) {
+  // Build rows for ALL countries
+  const rowsAll = [];
   for (const f of features) {
-    const iso = getISO3(f),
-      name = getName(f);
-    const v0 = val("ELEC", iso, y0),
-      v1 = val("ELEC", iso, y1);
+    const iso = getISO3(f);
+    const nameRaw = getName(f);
+    const name = SDG7_COUNTRY_ALIASES[nameRaw] ?? nameRaw;
+
+    const v0 = val("ELEC", iso, y0);
+    const v1 = val("ELEC", iso, y1);
     if (v0 == null || v1 == null) continue;
-    rows.push({ country: name, v2015: +v0, vLatest: +v1, dv: +v1 - +v0 });
+
+    rowsAll.push({ iso, country: name, v2015: +v0, vLatest: +v1, dv: +v1 - +v0 });
   }
-  const top = rows
-    .sort((a, b) => d3.descending(a.dv, b.dv))
-    .slice(0, 10)
-    .reverse();
-  const long = top.flatMap((d) => [
-    { country: d.country, type: "2015", value: d.v2015, dv: null, dv_fmt: "" },
-    {
-      country: d.country,
-      type: "Latest",
-      value: d.vLatest,
-      dv: d.dv,
-      dv_fmt: `${d.dv >= 0 ? "+" : ""}${d.dv.toFixed(1)} pp`
+
+  // Controls: build over ALL countries (alphabetical), but tick only defaults
+  const ctlHost = document.querySelector("#elec-controls");
+  let selected = new Set(SDG7_DEFAULT_ISO_ORDER);
+
+  if (ctlHost) {
+    const countryList = rowsAll
+      .map(d => ({ iso: d.iso, name: d.country }))
+      .sort((a, b) => d3.ascending(a.name, b.name));
+
+    // Reuse your SDG-6 helper; signature: (containerEl, countries, selectedDefaults)
+    buildCountryMultiSelect(ctlHost, countryList, selected);
+
+    ctlHost.addEventListener("changeCountries", async (e) => {
+      selected = e.detail;
+      await render();
+      refreshAnnotations(); // keep map callouts in sync
+    });
+  }
+
+  async function render() {
+    // Only selected countries
+    const selRows = rowsAll.filter(d => selected.has(d.iso));
+
+    // Order: your default list (filtered) forms the bottom→top; then any extra selections after that (alphabetical)
+    const defaultFirst = SDG7_DEFAULT_ISO_ORDER
+      .filter(iso => selected.has(iso))
+      .map(iso => selRows.find(d => d.iso === iso))
+      .filter(Boolean);
+
+    const others = selRows
+      .filter(d => !SDG7_DEFAULT_ISO_ORDER.includes(d.iso))
+      .sort((a, b) => d3.ascending(a.country, b.country));
+
+    const shown = [...defaultFirst, ...others];
+
+    // If user clears all, fall back to your defaults
+    if (!shown.length) {
+      selected = new Set(SDG7_DEFAULT_ISO_ORDER);
+      return render();
     }
-  ]);
-  const spec = {
-    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    width: "container",
-    height: 420,
-    data: { values: long },
-    encoding: {
-      y: {
-        field: "country",
-        type: "nominal",
-        sort: top.map((d) => d.country),
-        axis: { title: null }
+
+    // Long-form for Vega-Lite
+    const long = shown.flatMap(d => ([
+      { country: d.country, type: "2015",   value: d.v2015, dv: null, dv_fmt: "" },
+      { country: d.country, type: "Latest", value: d.vLatest, dv: d.dv, dv_fmt: `${d.dv >= 0 ? "+" : ""}${d.dv.toFixed(1)} pp` }
+    ]));
+
+    // IMPORTANT: Vega-Lite y.sort takes top→bottom order, so we pass the REVERSED array
+    const yOrderTopToBottom = [...shown.map(d => d.country)].reverse();
+
+    const spec = {
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  width: "container",
+  height: Math.max(360, 36 * Math.max(3, shown.length) + 80),
+  padding: { top: 8, right: 6, bottom: 34, left: 6 },
+  data: { values: long },
+
+  // Keep ONLY Y at top-level (no x here)
+  encoding: {
+    y: {
+      field: "country",
+      type: "nominal",
+      sort: yOrderTopToBottom,
+      axis: {
+        title: null,
+        grid: true,
+        gridColor: "#e5e7eb",
+        gridOpacity: 0.5,
+        tickColor: "#94a3b8",
+        tickSize: 6,
+        domain: false,
+        labelColor: "#334155",
+        labelFontSize: 12,
+        labelPadding: 4
+      }
+    }
+  },
+
+  layer: [
+    // 1) AXIS HOST — draws the bottom x-axis (invisible point layer)
+    {
+      mark: { type: "point", opacity: 0 },
+      encoding: {
+        x: {
+          field: "value",
+          type: "quantitative",
+          title: "% access to electricity",
+          scale: { domain: [0, 100] },
+          axis: {
+            orient: "bottom",
+            domain: true,
+            ticks: true,
+            tickCount: 6,
+            values: [0, 20, 40, 60, 80, 100],
+            labels: true,
+            labelColor: "#334155",
+            labelFontSize: 11,
+            tickColor: "#94a3b8",
+            tickSize: 6,
+            titleColor: "#334155",
+            titlePadding: 8
+          }
+        },
+        y: { field: "country", type: "nominal" }
       }
     },
-    layer: [
-      {
-        mark: { type: "rule", strokeWidth: 2, opacity: 0.6 },
-        encoding: {
-          x: {
-            aggregate: "min",
-            field: "value",
-            type: "quantitative",
-            title: "% access",
-            scale: { domain: [0, 100] }
-          },
-          x2: { aggregate: "max", field: "value", type: "quantitative" }
-        }
-      },
-      {
-        transform: [{ filter: "datum.type === '2015'" }],
-        mark: { type: "point", filled: true, size: 60, color: "#64748b" },
-        encoding: {
-          x: { field: "value", type: "quantitative" },
-          tooltip: [
-            { field: "country" },
-            { field: "value", title: "2015", format: ".1f" }
-          ]
-        }
-      },
-      {
-        transform: [{ filter: "datum.type === 'Latest'" }],
-        mark: { type: "point", filled: true, size: 70, color: "#0ea5e9" },
-        encoding: {
-          x: { field: "value", type: "quantitative" },
-          tooltip: [
-            { field: "country" },
-            { field: "value", title: "Latest", format: ".1f" },
-            { field: "dv", title: "Δ (pp)", format: ".1f" }
-          ]
-        }
-      },
-      {
-        transform: [{ filter: "datum.type === 'Latest'" }],
-        mark: {
-          type: "text",
-          dx: 6,
-          align: "left",
-          baseline: "middle",
-          fontSize: 11,
-          color: "#0f172a"
-        },
-        encoding: {
-          x: { field: "value", type: "quantitative" },
-          text: { field: "dv_fmt" }
-        }
+
+    // 2) RULE (dumbbell line) — keep axis off here
+    {
+      transform: [{
+        aggregate: [
+          { op: "min", field: "value", as: "x0" },
+          { op: "max", field: "value", as: "x1" }
+        ],
+        groupby: ["country"]
+      }],
+      mark: { type: "rule", strokeWidth: 2, opacity: 0.6 },
+      encoding: {
+        x:  { field: "x0", type: "quantitative", axis: null },
+        x2: { field: "x1" },
+        y:  { field: "country", type: "nominal" }
       }
-    ]
-  };
-  const el = document.querySelector(containerSelector);
-  if (!el) return;
-  el.innerHTML = "";
-  try {
-    await vegaEmbed(containerSelector, spec, { actions: false });
-  } catch (e) {
-    console.error("vegaEmbed failed:", e);
+    },
+
+    // 3) 2015 point — axis off
+    {
+      transform: [{ filter: "datum.type === '2015'" }],
+      mark: { type: "point", filled: true, size: 60, color: "#64748b" },
+      encoding: {
+        x: { field: "value", type: "quantitative", scale: { domain: [0, 100] }, axis: null },
+        y: { field: "country", type: "nominal" },
+        tooltip: [
+          { field: "country" },
+          { field: "value", title: "2015", format: ".1f" }
+        ]
+      }
+    },
+
+    // 4) Latest point — axis off
+    {
+      transform: [{ filter: "datum.type === 'Latest'" }],
+      mark: { type: "point", filled: true, size: 70, color: "#0ea5e9" },
+      encoding: {
+        x: { field: "value", type: "quantitative", scale: { domain: [0, 100] }, axis: null },
+        y: { field: "country", type: "nominal" },
+        tooltip: [
+          { field: "country" },
+          { field: "value", title: "Latest", format: ".1f" },
+          { field: "dv", title: "Δ (pp)", format: ".1f" }
+        ]
+      }
+    },
+
+    // 5) (Optional) 2015 text label — axis off
+    {
+      transform: [
+        { filter: "datum.type === '2015'" },
+        { calculate: "format(datum.value, '.1f') + '%'", as: "lbl" }
+      ],
+      mark: { type: "text", dx: -6, align: "right", baseline: "middle", fontSize: 11, color: "#0f172a" },
+      encoding: {
+        x: { field: "value", type: "quantitative", scale: { domain: [0, 100] }, axis: null },
+        y: { field: "country", type: "nominal" },
+        text: { field: "lbl" }
+      }
+    },
+
+    // 6) (Optional) Latest text label — axis off
+    {
+      transform: [
+        { filter: "datum.type === 'Latest'" },
+        { calculate: "format(datum.value, '.1f') + '%'", as: "lbl" }
+      ],
+      mark: { type: "text", dx: 6, align: "left", baseline: "middle", fontSize: 11, color: "#0f172a" },
+      encoding: {
+        x: { field: "value", type: "quantitative", scale: { domain: [0, 100] }, axis: null },
+        y: { field: "country", type: "nominal" },
+        text: { field: "lbl" }
+      }
+    }
+  ],
+
+  // Belt-and-braces: avoid any layer reviving a second axis
+  resolve: { scale: { x: "independent" } },
+  config: {
+    axisX:   { orient: "bottom", title: null },
+    axisXTop:{ ticks: false, labels: false, domain: false, title: null }
   }
+};
+
+
+    const el = document.querySelector(containerSelector);
+    if (!el) return;
+    el.innerHTML = "";
+    try { await vegaEmbed(containerSelector, spec, { actions: false }); }
+    catch (e) { console.error("vegaEmbed failed:", e); }
+  }
+
+  await render();
 }
+
 
 // SDG 9 – Internet users: horizontal boxplots, one region per row
 // Adds a "Comparison Year" slider below the legend to compare 2015 vs any later year.
@@ -723,98 +859,136 @@ async function drawWaterTopImprovers(containerSelector, features, baseYear = SDG
     //    - single shared x scale defined at top-level with axis on bottom ONLY
     //    - layers reference x without adding their own axes (prevents a second/top axis)
     const spec = {
-      $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-      width: "container",
-      height: Math.max(360, 28 * Math.max(3, shown.length) + 80),
-      data: { values: long },
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  width: "container",
+  height: Math.max(360, 28 * Math.max(3, shown.length) + 80),
+  padding: { top: 10, left: 5, right: 5, bottom: 34 },
+  data: { values: long },
 
-      // shared encodings
+  // 👉 Important: do NOT define x at top level; only keep Y here
+  encoding: {
+    y: {
+      field: "country",
+      type: "nominal",
+      sort: shown.map(d => d.country),
+      axis: { title: null, grid: true, gridColor: "#e5e7eb", tickColor: "#e5e7eb" }
+    }
+  },
+
+  // 👉 Make each layer own its x encoding; the first (axis host) draws the axis.
+  layer: [
+    // 1) AXIS HOST (invisible point) — draws the bottom x-axis
+    {
+      mark: { type: "point", opacity: 0 },
       encoding: {
         x: {
           field: "value",
           type: "quantitative",
+          title: "% population with safely managed water",
           scale: { domain: [0, 100] },
-          axis: { title: "% safely managed", orient: "bottom" } // ← bottom only
+          axis: {
+            orient: "bottom",
+            domain: true,
+            ticks: true,
+            tickCount: 6,
+            values: [0, 20, 40, 60, 80, 100],
+            labels: true
+          }
         },
-        y: {
-          field: "country",
-          type: "nominal",
-          sort: shown.map(d => d.country),
-          axis: { title: null, grid: true, gridColor: "#e5e7eb", tickColor: "#e5e7eb"}
-        }
-      },
+        y: { field: "country", type: "nominal" }
+      }
+    },
 
-      layer: [
-        {
-          // line between baseline and latest (using rule over min/max by country)
-          transform: [{ aggregate: [{ op: "min", field: "value", as: "x0" }, { op: "max", field: "value", as: "x1" }], groupby: ["country"] }],
-          mark: { type: "rule", strokeWidth: 2, opacity: 0.6 },
-          encoding: { x: { field: "x0", type: "quantitative", axis: null }, x2: { field: "x1" } }
-        },
-        {
-          transform: [{ filter: "datum.type === 'Baseline'" }],
-          mark: { type: "point", filled: true, size: 55, color: "#64748b" },
-          encoding: {
-            // x inherited; do not add axis here
-            tooltip: [
-              { field: "country" },
-              { field: "year", title: "Baseline year" },
-              { field: "value", title: "Baseline %", format: ".1f" }
-            ]
-          }
-        },
-        {
-          transform: [{ filter: "datum.type === 'Latest'" }],
-          mark: { type: "point", filled: true, size: 70, color: "#0ea5e9" },
-          encoding: {
-            tooltip: [
-              { field: "country" },
-              { field: "year", title: "Latest year" },
-              { field: "value", title: "Latest %", format: ".1f" },
-              { field: "dv_pp", title: "Δ (pp)", format: ".1f" },
-              { field: "dv_people", title: "People gained", format: ",.0f" }
-            ]
-          }
-        },
-        {
-          transform: [
-            { filter: "datum.type === 'Baseline'" },
-            { calculate: "format(datum.value, '.1f') + '%'", as: "value_label" }
-          ],
-          mark: {
-            type: "text",
-            dx: -6,
-            align: "right",
-            baseline: "middle",
-            fontSize: 11,
-            color: "#0f172a"
-          },
-          encoding: {
-            x: { field: "value", type: "quantitative" },
-            text: { field: "value_label" }
-          }
-        },
-        {
-          transform: [
-            { filter: "datum.type === 'Latest'" },
-            { calculate: "format(datum.value, '.1f') + '%'", as: "value_label" }
-          ],
-          mark: {
-            type: "text",
-            dx: 6,
-            align: "left",
-            baseline: "middle",
-            fontSize: 11,
-            color: "#0f172a"
-          },
-          encoding: {
-            x: { field: "value", type: "quantitative" },
-            text: { field: "value_label" }
-          }
-        }
-      ]
-    };
+    // 2) RULE (dumbbell line) — keep axis:null so it never adds/overrides an axis
+    {
+      transform: [{
+        aggregate: [
+          { op: "min", field: "value", as: "x0" },
+          { op: "max", field: "value", as: "x1" }
+        ],
+        groupby: ["country"]
+      }],
+      mark: { type: "rule", strokeWidth: 2, opacity: 0.6 },
+      encoding: {
+        x:  { field: "x0", type: "quantitative", axis: null },
+        x2: { field: "x1" },
+        y:  { field: "country", type: "nominal" }
+      }
+    },
 
+    // 3) BASELINE point
+    {
+      transform: [{ filter: "datum.type === 'Baseline'" }],
+      mark: { type: "point", filled: true, size: 55, color: "#64748b" },
+      encoding: {
+        x: { field: "value", type: "quantitative", scale: { domain: [0, 100] }, axis: null },
+        y: { field: "country", type: "nominal" },
+        tooltip: [
+          { field: "country" },
+          { field: "year", title: "Baseline year" },
+          { field: "value", title: "Baseline %", format: ".1f" }
+        ]
+      }
+    },
+
+    // 4) LATEST point
+    {
+      transform: [{ filter: "datum.type === 'Latest'" }],
+      mark: { type: "point", filled: true, size: 70, color: "#0ea5e9" },
+      encoding: {
+        x: { field: "value", type: "quantitative", scale: { domain: [0, 100] }, axis: null},
+        y: { field: "country", type: "nominal" },
+        tooltip: [
+          { field: "country" },
+          { field: "year", title: "Latest year" },
+          { field: "value", title: "Latest %", format: ".1f" },
+          { field: "dv_pp", title: "Δ (pp)", format: ".1f" },
+          { field: "dv_people", title: "People gained", format: ",.0f" }
+        ]
+      }
+    },
+
+    // 5) BASELINE label
+    {
+      transform: [
+        { filter: "datum.type === 'Baseline'" },
+        { calculate: "format(datum.value, '.1f') + '%'", as: "value_label" }
+      ],
+      mark: { type: "text", dx: -6, align: "right", baseline: "middle", fontSize: 11, color: "#0f172a" },
+      encoding: {
+        x: { field: "value", type: "quantitative", scale: { domain: [0, 100] }, axis: null },
+        y: { field: "country", type: "nominal" },
+        text: { field: "value_label" }
+      }
+    },
+
+    // 6) LATEST label
+    {
+      transform: [
+        { filter: "datum.type === 'Latest'" },
+        { calculate: "format(datum.value, '.1f') + '%'", as: "value_label" }
+      ],
+      mark: { type: "text", dx: 6, align: "left", baseline: "middle", fontSize: 11, color: "#0f172a" },
+      encoding: {
+        x: { field: "value", type: "quantitative", scale: { domain: [0, 100] }, axis: null},
+        y: { field: "country", type: "nominal" },
+        text: { field: "value_label" }
+      }
+    }
+  ],
+
+  // 👉 Crucial: prevent the rule layer’s axis:null from killing the host axis
+  resolve: { scale: { x: "independent" } },
+config: {
+  axisX: {
+    orient: "bottom",      // force bottom only
+    title: null,           // remove "value" label
+    labels: true,
+    ticks: true
+  }
+}
+
+};
     const el = document.querySelector(containerSelector);
     if (!el) return;
     el.innerHTML = "";
@@ -1365,9 +1539,10 @@ SCENES.electricity = () => {
     }
   });
 
-  drawElectricityLollipop("#slope", GEO.features, y0, y1).then(() => {
+  drawElectricityLollipopFiltered("#slope", GEO.features, y0, y1).then(() => {
     refreshAnnotations();
   });
+
   d3
     .select("#slope-title")
     .text(
